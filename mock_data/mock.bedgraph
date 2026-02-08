@@ -1,0 +1,7 @@
+# Mock bedGraph file for testing ribosome density parsing
+# Format: chrom start end score
+# Note: bedGraph uses 0-based coordinates, start is inclusive, end is exclusive
+# These coordinates overlap with mock.gtf CDS (positions 1-45 in 1-based coords)
+mock_chrom	0	15	10.5
+mock_chrom	15	30	25.3
+mock_chrom	30	45	18.7
