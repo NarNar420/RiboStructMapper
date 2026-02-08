@@ -8,12 +8,16 @@ It handles file uploads, job management, and serves processed results.
 import os
 import uuid
 import shutil
+import traceback
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+
+# Import the pipeline function
+from main_cli import run_pipeline
 
 
 # Initialize FastAPI application
@@ -65,6 +69,80 @@ def save_upload_file(upload_file: UploadFile, destination: Path) -> None:
         shutil.copyfileobj(upload_file.file, f)
 
 
+def process_job(job_id: str) -> None:
+    """
+    Process a job in the background.
+    
+    This function loads the uploaded files, parses parameters, runs the
+    pipeline, and updates the job status.
+    
+    Args:
+        job_id: The unique job identifier
+    """
+    job_dir = JOBS_DIR / job_id
+    status_file = job_dir / "status.txt"
+    
+    try:
+        # Update status to processing
+        with open(status_file, "w") as f:
+            f.write("processing\n")
+        
+        # Define file paths
+        pdb_path = str(job_dir / "input.pdb")
+        fasta_path = str(job_dir / "input.fasta")
+        gtf_path = str(job_dir / "input.gtf")
+        bedgraph_path = str(job_dir / "input.bedgraph")
+        
+        # Parse parameters
+        params_file = job_dir / "params.txt"
+        with open(params_file, "r") as f:
+            params_content = f.read()
+        
+        # Extract offsets from params.txt
+        # Format: "offsets=0,-10,-15"
+        offsets_str = ""
+        for line in params_content.split("\n"):
+            if line.startswith("offsets="):
+                offsets_str = line.split("=", 1)[1].strip()
+                break
+        
+        # Parse offsets into a list of integers
+        offsets = [int(x.strip()) for x in offsets_str.split(",") if x.strip()]
+        
+        # Run the pipeline
+        output_files = run_pipeline(
+            pdb_path=pdb_path,
+            fasta_path=fasta_path,
+            gtf_path=gtf_path,
+            bedgraph_path=bedgraph_path,
+            offsets=offsets,
+            aggregation_method='mean',
+            output_dir=str(job_dir)
+        )
+        
+        # Update status to completed
+        with open(status_file, "w") as f:
+            f.write("completed\n")
+        
+        # Log the output files
+        log_file = job_dir / "output_files.txt"
+        with open(log_file, "w") as f:
+            for offset, path in sorted(output_files.items()):
+                f.write(f"{offset}: {path}\n")
+    
+    except Exception as e:
+        # Update status to failed
+        with open(status_file, "w") as f:
+            f.write("failed\n")
+        
+        # Save error information
+        error_file = job_dir / "error.txt"
+        with open(error_file, "w") as f:
+            f.write(f"Error: {str(e)}\n\n")
+            f.write("Traceback:\n")
+            f.write(traceback.format_exc())
+
+
 # ============================================================================
 # API Endpoints
 # ============================================================================
@@ -86,6 +164,7 @@ async def root():
 
 @app.post("/submit_job", response_model=JobResponse)
 async def submit_job(
+    background_tasks: BackgroundTasks,
     pdb_file: UploadFile = File(..., description="PDB structure file"),
     fasta_file: UploadFile = File(..., description="Genomic FASTA file"),
     gtf_file: UploadFile = File(..., description="GTF/GFF annotation file"),
@@ -142,10 +221,13 @@ async def submit_job(
         with open(status_file, "w") as f:
             f.write("uploaded\n")
         
+        # Trigger background processing
+        background_tasks.add_task(process_job, job_id)
+        
         return JobResponse(
             job_id=job_id,
-            status="uploaded",
-            message=f"Job created successfully. Files saved to jobs/{job_id}/"
+            status="queued",
+            message=f"Job created and queued for processing. Job ID: {job_id}"
         )
     
     except Exception as e:
