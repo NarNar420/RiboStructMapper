@@ -39,31 +39,52 @@ def _find_seq_record(key: str, seq_records: dict):
     return None
 
 
-def parse_genomic_data(fasta_path: str, gtf_path: str, gene_id: Optional[str] = None, transcript_id: Optional[str] = None) -> Tuple[str, List[Tuple[str, int]]]:
+def parse_genomic_data(fasta_path: str, gtf_path: Optional[str] = None, gene_id: Optional[str] = None, transcript_id: Optional[str] = None) -> Tuple[str, List[Tuple[str, int]]]:
     """
-    Parse FASTA and GTF to extract the concatenated CDS nucleotide sequence and a coordinate map.
+    Parse FASTA (and optionally GTF) to extract the CDS nucleotide sequence and a coordinate map.
 
     Args:
-        fasta_path: Path to FASTA file containing genomic sequences (chromosomes/contigs).
-        gtf_path: Path to GTF/GFF file containing CDS features.
-        gene_id: Optional gene_id to select. If provided, only transcripts belonging to this gene are considered.
-        transcript_id: Optional transcript_id to select. If provided, that transcript's CDS is used.
+        fasta_path: Path to FASTA file containing genomic sequences or CDS sequences.
+        gtf_path: Optional path to GTF/GFF file containing CDS features. 
+                  If None, FASTA is assumed to contain CDS sequences directly.
+        gene_id: Optional gene_id to select. If provided with GTF, only transcripts belonging 
+                 to this gene are considered. If provided without GTF, selects that sequence ID.
+        transcript_id: Optional transcript_id to select (used with GTF mode).
 
     Returns:
         tuple: (nucleotide_sequence: str, coordinate_map: list of (seqname, genomic_pos) for each nucleotide in transcript order)
 
     Raises:
-        FileNotFoundError: if either input file is missing.
-        ValueError: if no CDS features are found or fasta sequence cannot be matched.
+        FileNotFoundError: if FASTA file is missing.
+        ValueError: if no sequences found or specified sequence not found.
     """
     if not os.path.exists(fasta_path):
         raise FileNotFoundError(f"FASTA file not found: {fasta_path}")
-    if not os.path.exists(gtf_path):
-        raise FileNotFoundError(f"GTF file not found: {gtf_path}")
 
     seq_records = {rec.id: rec for rec in SeqIO.parse(fasta_path, "fasta")}
     if not seq_records:
         raise ValueError(f"No sequences found in FASTA: {fasta_path}")
+
+    # MODE 2: FASTA-only mode (no GTF provided - assume FASTA contains CDS)
+    if gtf_path is None:
+        # Select sequence by gene_id if provided, otherwise use first sequence
+        if gene_id:
+            seq_rec = seq_records.get(gene_id)
+            if seq_rec is None:
+                raise ValueError(f"Sequence ID '{gene_id}' not found in FASTA. Available: {', '.join(seq_records.keys())}")
+        else:
+            # Use first sequence in FASTA
+            seq_rec = list(seq_records.values())[0]
+        
+        nucleotide_seq = str(seq_rec.seq).upper()
+        # Create simple 1-based coordinate map
+        coordinate_map = [(seq_rec.id, i + 1) for i in range(len(nucleotide_seq))]
+        
+        return nucleotide_seq, coordinate_map
+
+    # MODE 1: GTF mode (extract CDS from genomic coordinates)
+    if not os.path.exists(gtf_path):
+        raise FileNotFoundError(f"GTF file not found: {gtf_path}")
 
     # Parse GTF and collect CDS features
     cds_features = []

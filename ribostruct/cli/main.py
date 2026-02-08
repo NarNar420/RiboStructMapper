@@ -29,9 +29,9 @@ from ribostruct.core.injector import inject_bfactors
 def run_pipeline(
     pdb_path: str,
     fasta_path: str,
-    gtf_path: str,
-    bedgraph_path: str,
-    offsets: List[int],
+    gtf_path: str = None,
+    bedgraph_path: str = None,
+    offsets: List[int] = None,
     gene_id: str = None,
     transcript_id: str = None,
     chain_id: str = None,
@@ -47,12 +47,12 @@ def run_pipeline(
     
     Args:
         pdb_path: Path to input PDB file
-        fasta_path: Path to genomic FASTA file
-        gtf_path: Path to GTF/GFF annotation file
+        fasta_path: Path to FASTA file (genomic or CDS sequence)
+        gtf_path: Optional path to GTF/GFF annotation file (required if FASTA is genomic)
         bedgraph_path: Path to bedGraph density file
         offsets: List of offset values (in nucleotides) to apply
-        gene_id: Optional gene ID to filter (default: auto-select)
-        transcript_id: Optional transcript ID to filter (default: longest)
+        gene_id: Optional gene ID to filter (GTF mode) or sequence ID to select (FASTA-only mode)
+        transcript_id: Optional transcript ID to filter (GTF mode only)
         chain_id: Optional PDB chain ID (default: first chain)
         aggregation_method: Density aggregation method ('mean', 'max', 'sum', 'median')
         output_dir: Directory to save output files (default: current directory)
@@ -61,7 +61,7 @@ def run_pipeline(
         Dictionary mapping offset values to output file paths
     
     Pipeline Steps:
-        1. Parse genomic data (FASTA + GTF) → nucleotide sequence
+        1. Parse genomic data (FASTA + optional GTF) → nucleotide sequence
         2. Parse ribosome density (bedGraph) → raw density vector
         3. Parse PDB structure → amino acid sequence + structure object
         4. Translate genomic sequence → genomic amino acids
@@ -74,11 +74,14 @@ def run_pipeline(
     print("=" * 70)
     
     # ========================================================================
-    # STEP 1: Parse Genomic Data (FASTA + GTF)
+    # STEP 1: Parse Genomic Data (FASTA + optional GTF)
     # ========================================================================
     print("\n[STEP 1] Parsing genomic data...")
     print(f"  FASTA: {fasta_path}")
-    print(f"  GTF:   {gtf_path}")
+    if gtf_path:
+        print(f"  GTF:   {gtf_path}")
+    else:
+        print(f"  GTF:   (none - FASTA assumed to be CDS)")
     
     nucleotide_seq, coord_map = parse_genomic_data(
         fasta_path, gtf_path, gene_id=gene_id, transcript_id=transcript_id

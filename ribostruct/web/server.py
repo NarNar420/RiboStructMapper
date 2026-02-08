@@ -104,7 +104,11 @@ def process_job(job_id: str) -> None:
         # Define file paths
         pdb_path = str(job_dir / "input.pdb")
         fasta_path = str(job_dir / "input.fasta")
-        gtf_path = str(job_dir / "input.gtf")
+        
+        # GTF is optional - check if it exists
+        gtf_file_path = job_dir / "input.gtf"
+        gtf_path = str(gtf_file_path) if gtf_file_path.exists() else None
+        
         bedgraph_path = str(job_dir / "input.bedgraph")
         
         # Parse parameters
@@ -252,21 +256,21 @@ async def root():
 async def submit_job(
     background_tasks: BackgroundTasks,
     pdb_file: UploadFile = File(..., description="PDB structure file"),
-    fasta_file: UploadFile = File(..., description="Genomic FASTA file"),
-    gtf_file: UploadFile = File(..., description="GTF/GFF annotation file"),
+    fasta_file: UploadFile = File(..., description="FASTA file (genomic or CDS)"),
+    gtf_file: Optional[UploadFile] = File(None, description="GTF/GFF annotation file (optional)"),
     density_file: UploadFile = File(..., description="bedGraph density file"),
     offsets: str = Form(..., description="Comma-separated offset values (e.g., '0,-10,-15')")
 ) -> JobResponse:
     """
     Submit a new job for processing.
     
-    This endpoint accepts all required input files and creates a new job.
-    Files are saved to a unique job directory for later processing.
+    This endpoint accepts required input files and creates a new job.
+    GTF file is optional - if not provided, FASTA is assumed to be CDS.
     
     Args:
         pdb_file: PDB structure file
-        fasta_file: Genomic sequence in FASTA format
-        gtf_file: Gene annotation in GTF/GFF format
+        fasta_file: FASTA file (genomic with GTF, or CDS without GTF)
+        gtf_file: Optional gene annotation in GTF/GFF format
         density_file: Ribosome density in bedGraph format
         offsets: Comma-separated offset values (e.g., "0,-10,-15")
     
@@ -294,7 +298,11 @@ async def submit_job(
         # Save uploaded files
         save_upload_file(pdb_file, job_dir / "input.pdb")
         save_upload_file(fasta_file, job_dir / "input.fasta")
-        save_upload_file(gtf_file, job_dir / "input.gtf")
+        
+        # GTF is optional
+        if gtf_file:
+            save_upload_file(gtf_file, job_dir / "input.gtf")
+        
         save_upload_file(density_file, job_dir / "input.bedgraph")
         
         # Save parameters

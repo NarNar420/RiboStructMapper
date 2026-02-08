@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -190,7 +191,9 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .download-btn {
@@ -224,6 +227,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <header>
@@ -254,19 +258,19 @@
                             <span class="file-text">Choose FASTA file...</span>
                         </label>
                     </div>
-                    <p class="help-text">Genomic sequence in FASTA format</p>
+                    <p class="help-text">CDS or genomic sequence in FASTA format</p>
                 </div>
 
                 <div class="form-group">
-                    <label>GTF Annotation File</label>
+                    <label>GTF Annotation File (Optional)</label>
                     <div class="file-input-wrapper">
-                        <input type="file" id="gtf_file" accept=".gtf,.gff" required>
+                        <input type="file" id="gtf_file" accept=".gtf,.gff">
                         <label for="gtf_file" class="file-label" id="gtf_label">
                             <span class="file-icon">📋</span>
-                            <span class="file-text">Choose GTF file...</span>
+                            <span class="file-text">Choose GTF file (optional)...</span>
                         </label>
                     </div>
-                    <p class="help-text">Gene annotation in GTF/GFF format</p>
+                    <p class="help-text">Gene annotation (only needed if FASTA is genomic with introns)</p>
                 </div>
 
                 <div class="form-group">
@@ -305,16 +309,16 @@
     <script>
         // Update file labels when files are selected
         const fileInputs = ['pdb_file', 'fasta_file', 'gtf_file', 'density_file'];
-        
+
         fileInputs.forEach(inputId => {
             const input = document.getElementById(inputId);
             const label = document.getElementById(inputId.replace('_file', '_label'));
-            
+
             input.addEventListener('change', (e) => {
                 const fileName = e.target.files[0]?.name || 'Choose file...';
                 const textSpan = label.querySelector('.file-text');
                 textSpan.textContent = fileName;
-                
+
                 if (e.target.files[0]) {
                     label.classList.add('has-file');
                 } else {
@@ -332,41 +336,47 @@
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             // Prepare form data
             const formData = new FormData();
             formData.append('pdb_file', document.getElementById('pdb_file').files[0]);
             formData.append('fasta_file', document.getElementById('fasta_file').files[0]);
-            formData.append('gtf_file', document.getElementById('gtf_file').files[0]);
+
+            // GTF is optional - only include if selected
+            const gtfFile = document.getElementById('gtf_file').files[0];
+            if (gtfFile) {
+                formData.append('gtf_file', gtfFile);
+            }
+
             formData.append('density_file', document.getElementById('density_file').files[0]);
             formData.append('offsets', document.getElementById('offsets').value);
-            
+
             // Disable form and show status
             submitBtn.disabled = true;
             submitBtn.textContent = '⏳ Uploading...';
             statusArea.classList.add('visible');
             statusText.innerHTML = '<span class="spinner"></span>Uploading files...';
-            
+
             try {
                 // Submit job
                 const response = await fetch('/submit_job', {
                     method: 'POST',
                     body: formData
                 });
-                
+
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                
+
                 const result = await response.json();
                 const jobId = result.job_id;
-                
+
                 statusText.innerHTML = `<span class="spinner"></span>Processing job ${jobId.substring(0, 8)}...`;
-                
+
                 // Start polling for status
                 pollInterval = setInterval(() => pollStatus(jobId), 2000);
                 pollStatus(jobId); // Check immediately
-                
+
             } catch (error) {
                 statusText.innerHTML = `❌ Error: ${error.message}`;
                 submitBtn.disabled = false;
@@ -377,14 +387,14 @@
         async function pollStatus(jobId) {
             try {
                 const response = await fetch(`/status/${jobId}`);
-                
+
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                
+
                 const data = await response.json();
                 const status = data.status;
-                
+
                 if (status === 'completed') {
                     clearInterval(pollInterval);
                     statusText.innerHTML = `
@@ -395,21 +405,21 @@
                     `;
                     submitBtn.disabled = false;
                     submitBtn.textContent = '🚀 Process Files';
-                    
+
                 } else if (status === 'failed') {
                     clearInterval(pollInterval);
                     const errorMsg = data.message || 'Unknown error';
                     statusText.innerHTML = `❌ Processing failed: ${errorMsg}`;
                     submitBtn.disabled = false;
                     submitBtn.textContent = '🚀 Process Files';
-                    
+
                 } else if (status === 'processing') {
                     statusText.innerHTML = `<span class="spinner"></span>Processing pipeline... (status: ${status})`;
-                    
+
                 } else {
                     statusText.innerHTML = `<span class="spinner"></span>Status: ${status}`;
                 }
-                
+
             } catch (error) {
                 clearInterval(pollInterval);
                 statusText.innerHTML = `❌ Error checking status: ${error.message}`;
@@ -419,4 +429,5 @@
         }
     </script>
 </body>
+
 </html>
