@@ -89,7 +89,7 @@ def _find_seq_record(key: str, seq_records: dict):
     return None
 
 
-def parse_genomic_data(fasta_path: str, gtf_path: Optional[str] = None, gene_id: Optional[str] = None, transcript_id: Optional[str] = None) -> Tuple[str, List[Tuple[str, int]]]:
+def parse_genomic_data(fasta_path: str, gtf_path: Optional[str] = None, gene_id: Optional[str] = None, transcript_id: Optional[str] = None) -> Tuple[str, List[Tuple[str, int]], int]:
     """
     Parse FASTA (and optionally GTF) to extract the CDS nucleotide sequence and a coordinate map.
 
@@ -102,7 +102,9 @@ def parse_genomic_data(fasta_path: str, gtf_path: Optional[str] = None, gene_id:
         transcript_id: Optional transcript_id to select (used with GTF mode).
 
     Returns:
-        tuple: (nucleotide_sequence: str, coordinate_map: list of (seqname, genomic_pos) for each nucleotide in transcript order)
+        tuple: (nucleotide_sequence: str, 
+                coordinate_map: list of (seqname, genomic_pos), 
+                start_offset: int - number of nucleotides removed from start during sanitization)
 
     Raises:
         FileNotFoundError: if FASTA file is missing.
@@ -134,7 +136,7 @@ def parse_genomic_data(fasta_path: str, gtf_path: Optional[str] = None, gene_id:
         # Create simple 1-based coordinate map (adjusted for sanitization offset)
         coordinate_map = [(seq_rec.id, i + 1 + start_offset) for i in range(len(nucleotide_seq))]
         
-        return nucleotide_seq, coordinate_map
+        return nucleotide_seq, coordinate_map, start_offset
 
     # MODE 1: GTF mode (extract CDS from genomic coordinates)
     if not os.path.exists(gtf_path):
@@ -238,7 +240,7 @@ def parse_genomic_data(fasta_path: str, gtf_path: Optional[str] = None, gene_id:
     if len(nucleotide_seq) < len(coordinate_map):
         coordinate_map = coordinate_map[:len(nucleotide_seq)]
 
-    return nucleotide_seq, coordinate_map
+    return nucleotide_seq, coordinate_map, start_offset
 
 
 def parse_pdb_structure(pdb_file: str, chain_id: Optional[str] = None) -> Tuple[str, List]:

@@ -10,7 +10,7 @@ def test_parse_genomic_data_fasta_only():
     fasta_path = "data/mock/cds_only.fasta"
     
     # Parse without GTF
-    nucleotide_seq, coord_map = parse_genomic_data(
+    nucleotide_seq, coord_map, start_offset = parse_genomic_data(
         fasta_path=fasta_path,
         gtf_path=None  # No GTF
     )
@@ -24,6 +24,9 @@ def test_parse_genomic_data_fasta_only():
     assert coord_map[1] == ("MOCK_CDS", 2)
     assert coord_map[-1] == ("MOCK_CDS", 45)
     assert len(coord_map) == 45
+    
+    # Verify no offset (clean sequence)
+    assert start_offset == 0
 
 
 def test_parse_genomic_data_fasta_only_with_gene_id():
@@ -31,7 +34,7 @@ def test_parse_genomic_data_fasta_only_with_gene_id():
     fasta_path = "data/mock/cds_only.fasta"
     
     # Parse with gene_id (which acts as sequence ID in FASTA-only mode)
-    nucleotide_seq, coord_map = parse_genomic_data(
+    nucleotide_seq, coord_map, start_offset = parse_genomic_data(
         fasta_path=fasta_path,
         gtf_path=None,
         gene_id="MOCK_CDS"
@@ -40,6 +43,7 @@ def test_parse_genomic_data_fasta_only_with_gene_id():
     # Should work the same
     assert len(nucleotide_seq) == 45
     assert coord_map[0][0] == "MOCK_CDS"
+    assert start_offset == 0
 
 
 def test_parse_genomic_data_fasta_only_sequence_not_found():

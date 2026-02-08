@@ -83,11 +83,13 @@ def run_pipeline(
     else:
         print(f"  GTF:   (none - FASTA assumed to be CDS)")
     
-    nucleotide_seq, coord_map = parse_genomic_data(
+    nucleotide_seq, coord_map, start_offset = parse_genomic_data(
         fasta_path, gtf_path, gene_id=gene_id, transcript_id=transcript_id
     )
     
     print(f"  ✓ Extracted CDS: {len(nucleotide_seq)} nucleotides")
+    if start_offset > 0:
+        print(f"    ⚠ Sanitized: Removed {start_offset} nucleotides from start")
     print(f"    Sequence: {nucleotide_seq[:60]}...")
     
     # ========================================================================
@@ -103,9 +105,39 @@ def run_pipeline(
     
     raw_density = parse_ribo_density(bedgraph_path, chrom, start, end)
     
-    print(f"  ✓ Loaded density: {len(raw_density)} values")
+    print(f"  ✓ Loaded raw density: {len(raw_density)} values")
     print(f"    Chromosome: {chrom}, Region: {start}-{end}")
     print(f"    Density range: [{raw_density.min():.1f}, {raw_density.max():.1f}]")
+    
+    # Synchronize density with sanitized sequence
+    # Apply same sanitization offset to density vector
+    if start_offset > 0:
+        aligned_density = raw_density[start_offset:]
+        print(f"    ⚠ Aligned density: Shifted by {start_offset} to match sanitized sequence")
+    else:
+        aligned_density = raw_density
+    
+    # Ensure density vector matches sequence length
+    target_len = len(nucleotide_seq)
+    current_len = len(aligned_density)
+    
+    if current_len > target_len:
+        # Density too long - truncate
+        aligned_density = aligned_density[:target_len]
+        print(f"    ⚠ Truncated density: {current_len} → {target_len} (removed {current_len - target_len} from end)")
+    elif current_len < target_len:
+        # Density too short - pad with zeros
+        import numpy as np
+        padding = np.zeros(target_len - current_len)
+        aligned_density = np.concatenate([aligned_density, padding])
+        print(f"    ⚠ Padded density: {current_len} → {target_len} (added {target_len - current_len} zeros)")
+    
+    # Safety check
+    assert len(aligned_density) == len(nucleotide_seq), \
+        f"Density length ({len(aligned_density)}) must match sequence length ({len(nucleotide_seq)})"
+    
+    print(f"  ✓ Final density: {len(aligned_density)} values (matches sequence)")
+    
     
     # ========================================================================
     # STEP 3: Parse PDB Structure
@@ -154,7 +186,7 @@ def run_pipeline(
     print(f"  Aggregation method: {aggregation_method}")
     
     # CRITICAL: Apply offsets BEFORE aggregation (at NT level, not AA level)
-    offset_scores = process_offsets(raw_density, offsets, method=aggregation_method)
+    offset_scores = process_offsets(aligned_density, offsets, method=aggregation_method)
     
     print(f"  ✓ Generated {len(offset_scores)} offset versions")
     for offset, scores in offset_scores.items():
