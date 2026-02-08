@@ -1,10 +1,60 @@
 import os
 from typing import List, Tuple, Optional
+import logging
 
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.PDB import PDBParser
 import numpy as np
+
+# Set up logging
+logger = logging.getLogger(__name__)
+
+
+def sanitize_sequence(sequence: str) -> Tuple[str, int]:
+    """
+    Sanitize a nucleotide sequence to ensure it's in-frame and divisible by 3.
+    
+    This function:
+    1. Searches for the first ATG (start codon)
+    2. Slices the sequence from that position
+    3. Truncates the end to make length divisible by 3
+    
+    Args:
+        sequence: Raw nucleotide sequence (may contain leading garbage or incomplete codons)
+    
+    Returns:
+        Tuple of (cleaned_sequence, start_offset):
+            - cleaned_sequence: Sequence starting at ATG and divisible by 3
+            - start_offset: Number of nucleotides removed from the start
+    
+    Example:
+        >>> sanitize_sequence("CCATGTTCGGTTA")
+        ("ATGTTCGGT", 2)  # Removed "CC" from start, "TA" from end
+    """
+    # Convert to uppercase for consistency
+    seq = sequence.upper()
+    
+    # Search for first ATG (start codon)
+    start_index = seq.find("ATG")
+    
+    if start_index == -1:
+        # No ATG found - keep original sequence but log warning
+        logger.warning(f"No ATG start codon found in sequence (length {len(seq)}). Using sequence as-is.")
+        start_index = 0
+    elif start_index > 0:
+        logger.info(f"Found ATG at position {start_index}. Trimming {start_index} nucleotides from start.")
+    
+    # Slice from start position
+    seq = seq[start_index:]
+    
+    # Truncate end to make divisible by 3
+    remainder = len(seq) % 3
+    if remainder > 0:
+        logger.info(f"Truncating {remainder} nucleotides from end to maintain reading frame.")
+        seq = seq[:-remainder]
+    
+    return seq, start_index
 
 
 def _parse_gtf_attributes(attr_str: str) -> dict:
@@ -76,9 +126,13 @@ def parse_genomic_data(fasta_path: str, gtf_path: Optional[str] = None, gene_id:
             # Use first sequence in FASTA
             seq_rec = list(seq_records.values())[0]
         
-        nucleotide_seq = str(seq_rec.seq).upper()
-        # Create simple 1-based coordinate map
-        coordinate_map = [(seq_rec.id, i + 1) for i in range(len(nucleotide_seq))]
+        nucleotide_seq_raw = str(seq_rec.seq).upper()
+        
+        # Sanitize sequence to ensure proper frame
+        nucleotide_seq, start_offset = sanitize_sequence(nucleotide_seq_raw)
+        
+        # Create simple 1-based coordinate map (adjusted for sanitization offset)
+        coordinate_map = [(seq_rec.id, i + 1 + start_offset) for i in range(len(nucleotide_seq))]
         
         return nucleotide_seq, coordinate_map
 
@@ -168,10 +222,21 @@ def parse_genomic_data(fasta_path: str, gtf_path: Optional[str] = None, gene_id:
             seq_parts.append(str(seg.reverse_complement()))
             coordinate_map.extend([(seqname, pos) for pos in range(e, s - 1, -1)])
 
-    nucleotide_seq = "".join(seq_parts)
+    nucleotide_seq_raw = "".join(seq_parts)
 
-    if len(nucleotide_seq) != len(coordinate_map):
+    if len(nucleotide_seq_raw) != len(coordinate_map):
         raise RuntimeError("Internal error: nucleotide sequence length disagrees with coordinate map length.")
+
+    # Sanitize the concatenated CDS to ensure proper frame
+    nucleotide_seq, start_offset = sanitize_sequence(nucleotide_seq_raw)
+    
+    # Adjust coordinate map if start offset was applied
+    if start_offset > 0:
+        coordinate_map = coordinate_map[start_offset:]
+    
+    # Truncate coordinate map if end was trimmed
+    if len(nucleotide_seq) < len(coordinate_map):
+        coordinate_map = coordinate_map[:len(nucleotide_seq)]
 
     return nucleotide_seq, coordinate_map
 
