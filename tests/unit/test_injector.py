@@ -105,7 +105,6 @@ def test_basic_injection():
             print(f"  ✓ All unmapped residues have B-factor = 0.0")
             
             print("\n✓✓✓ Test 1 PASSED ✓✓✓\n")
-            return True
             
         finally:
             # Clean up temporary file
@@ -175,7 +174,6 @@ def test_all_residues_mapped():
             
             print(f"✓ All {num_residues} residues have correct B-factors")
             print("\n✓✓✓ Test 2 PASSED ✓✓✓\n")
-            return True
             
         finally:
             if os.path.exists(output_path):
@@ -241,7 +239,6 @@ def test_no_residues_mapped():
             
             print(f"✓ All {num_residues} residues have B-factor = 0.0")
             print("\n✓✓✓ Test 3 PASSED ✓✓✓\n")
-            return True
             
         finally:
             if os.path.exists(output_path):
@@ -311,7 +308,6 @@ def test_custom_unmapped_value():
             print(f"✓ Unmapped residue has custom value ({unmapped_value})")
             
             print("\n✓✓✓ Test 4 PASSED ✓✓✓\n")
-            return True
             
         finally:
             if os.path.exists(output_path):

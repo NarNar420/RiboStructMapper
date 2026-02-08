@@ -103,9 +103,8 @@ def test_cleanup_old_jobs():
     else:
         print(f"\n✗ Deletion count mismatch: {deleted_count} (expected {expected_deletions})")
         all_passed = False
-    
-    # Cleanup remaining test jobs
-    print(f"\nCleaning up remaining test jobs...")
+        
+    assert all_passed, "Some cleanup tests failed"
     for job_id, job_dir, _ in test_jobs:
         if job_dir.exists():
             shutil.rmtree(job_dir)
@@ -117,7 +116,7 @@ def test_cleanup_old_jobs():
         print("❌ SOME CLEANUP TESTS FAILED")
     print("=" * 60 + "\n")
     
-    return all_passed
+
 
 
 def test_cleanup_with_custom_age():
@@ -158,7 +157,7 @@ def test_cleanup_with_custom_age():
         print("❌ CUSTOM AGE TEST FAILED")
     print("=" * 60 + "\n")
     
-    return result
+    assert result, "Custom age test failed"
 
 
 def test_cleanup_empty_directory():
@@ -190,7 +189,7 @@ def test_cleanup_empty_directory():
         print("❌ EMPTY DIRECTORY TEST FAILED")
     print("=" * 60 + "\n")
     
-    return result
+    assert result, "Empty directory test failed"
 
 
 def main():

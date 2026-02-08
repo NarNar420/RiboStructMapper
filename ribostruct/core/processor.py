@@ -39,17 +39,24 @@ def shift_nucleotide_density(density: np.ndarray, offset: int) -> np.ndarray:
     if offset == 0:
         return density.copy()
     
+    # Invert offset sign to match user expectation:
+    # User wants negative offset to shift DOWNSTREAM (to the right, higher index)
+    # np.roll shifts right with positive values, left with negative.
+    # So we use -offset as the shift amount.
+    # Example: offset = -12. We want shift +12 (right). shift = -(-12) = +12.
+    shift = -offset
+    
     # Create output array filled with zeros
     shifted = np.zeros_like(density, dtype=float)
     
-    if offset < 0:
-        # Negative offset: shift left (upstream)
-        # Values from positions [-offset:] move to positions [0:len+offset]
-        shifted[:len(density) + offset] = density[-offset:]
+    if shift < 0:
+        # Negative shift: shift left (upstream)
+        # Values from positions [-shift:] move to positions [0:len+shift]
+        shifted[:len(density) + shift] = density[-shift:]
     else:
-        # Positive offset: shift right (downstream)
-        # Values from positions [:-offset] move to positions [offset:]
-        shifted[offset:] = density[:-offset]
+        # Positive shift: shift right (downstream)
+        # Values from positions [:-shift] move to positions [shift:]
+        shifted[shift:] = density[:-shift]
     
     return shifted
 

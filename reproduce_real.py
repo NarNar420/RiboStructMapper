@@ -62,7 +62,7 @@ def reproduce():
             pdb_path=pdb_path,
             fasta_path=fasta_path,
             bedgraph_path=bedgraph_path,
-            offsets=[0],
+            offsets=[0, -12],
             output_dir="tests/output_real_debug"
         )
         print("Pipeline finished.")
