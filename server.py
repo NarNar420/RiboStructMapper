@@ -15,6 +15,7 @@ from typing import Optional
 
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks
 from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 # Import the pipeline function
@@ -31,6 +32,9 @@ app = FastAPI(
 # Configuration
 JOBS_DIR = Path("jobs")
 JOBS_DIR.mkdir(exist_ok=True)
+
+STATIC_DIR = Path("static")
+STATIC_DIR.mkdir(exist_ok=True)
 
 
 # ============================================================================
@@ -155,7 +159,7 @@ def process_job(job_id: str) -> None:
 # API Endpoints
 # ============================================================================
 
-@app.get("/")
+@app.get("/api")
 async def root():
     """Root endpoint - API information."""
     return {
@@ -164,8 +168,8 @@ async def root():
         "status": "operational",
         "endpoints": {
             "submit_job": "POST /submit_job",
-            "job_status": "GET /status/{job_id} (coming soon)",
-            "download": "GET /download/{job_id} (coming soon)"
+            "job_status": "GET /status/{job_id}",
+            "download": "GET /download/{job_id}"
         }
     }
 
@@ -383,6 +387,14 @@ async def download_results(job_id: str):
         media_type="application/zip",
         filename=zip_filename
     )
+
+
+# ============================================================================
+# Static Files - Must be last
+# ============================================================================
+
+# Mount static files (HTML frontend)
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 
 # ============================================================================
