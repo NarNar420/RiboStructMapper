@@ -10,6 +10,8 @@ import uuid
 import shutil
 import traceback
 import zipfile
+import asyncio
+import time
 from pathlib import Path
 from typing import Optional
 
@@ -155,9 +157,81 @@ def process_job(job_id: str) -> None:
             f.write(traceback.format_exc())
 
 
+def cleanup_old_jobs(max_age_hours: int = 24) -> int:
+    """
+    Delete job folders older than the specified age.
+    
+    This function prevents disk overflow by automatically cleaning up
+    old completed/failed jobs.
+    
+    Args:
+        max_age_hours: Maximum age of jobs in hours (default: 24)
+    
+    Returns:
+        Number of jobs deleted
+    """
+    if not JOBS_DIR.exists():
+        return 0
+    
+    current_time = time.time()
+    max_age_seconds = max_age_hours * 3600
+    deleted_count = 0
+    
+    for job_dir in JOBS_DIR.iterdir():
+        if not job_dir.is_dir():
+            continue
+        
+        # Get the creation/modification time of the directory
+        dir_mtime = job_dir.stat().st_mtime
+        age_seconds = current_time - dir_mtime
+        
+        if age_seconds > max_age_seconds:
+            try:
+                shutil.rmtree(job_dir)
+                job_id = job_dir.name
+                print(f"[CLEANUP] Deleted old job: {job_id} (age: {age_seconds/3600:.1f} hours)")
+                deleted_count += 1
+            except Exception as e:
+                print(f"[CLEANUP] Error deleting job {job_dir.name}: {e}")
+    
+    if deleted_count > 0:
+        print(f"[CLEANUP] Total jobs deleted: {deleted_count}")
+    
+    return deleted_count
+
+
+async def background_cleanup_task():
+    """
+    Background task that runs cleanup periodically.
+    
+    This task runs every hour and cleans up jobs older than 24 hours.
+    """
+    while True:
+        try:
+            await asyncio.sleep(3600)  # Run every hour
+            print("[CLEANUP] Running scheduled cleanup...")
+            deleted = cleanup_old_jobs(max_age_hours=24)
+            if deleted == 0:
+                print("[CLEANUP] No old jobs to clean up")
+        except Exception as e:
+            print(f"[CLEANUP] Error in background cleanup: {e}")
+
+
 # ============================================================================
 # API Endpoints
 # ============================================================================
+
+@app.on_event("startup")
+async def startup_event():
+    """Run when the server starts."""
+    print("[SERVER] Starting RiboStructMapper server...")
+    print(f"[SERVER] Jobs directory: {JOBS_DIR}")
+    print(f"[SERVER] Static directory: {STATIC_DIR}")
+    
+    # Start the background cleanup task
+    asyncio.create_task(background_cleanup_task())
+    print("[SERVER] Background cleanup task started (runs every hour)")
+
 
 @app.get("/api")
 async def root():
