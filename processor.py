@@ -1,125 +1,193 @@
 """
-Data Processor for RiboStructMapper.
+RiboStructMapper - Data Processor Module
 
-This module provides functions to aggregate ribosome density data from nucleotide-level
-to amino acid-level, and apply offset corrections to the resulting vectors.
+This module handles ribosome density data processing, including:
+- Nucleotide-level offset application (ribosome position correction)
+- Nucleotide-to-amino acid aggregation
+- Multiple aggregation methods (mean, max, sum, median)
+
+CRITICAL: Offsets are applied at the NUCLEOTIDE level BEFORE aggregation
+to amino acids. This ensures proper spatial mapping of ribosome positions.
 """
 
-from typing import List, Dict, Literal
 import numpy as np
+from typing import Dict, List
+
+
+def shift_nucleotide_density(density: np.ndarray, offset: int) -> np.ndarray:
+    """
+    Shift nucleotide density values by the specified offset.
+    
+    This function applies ribosome position correction at the nucleotide level.
+    Negative offsets shift density upstream (towards 5' end).
+    
+    Args:
+        density: Nucleotide-level density array
+        offset: Number of nucleotides to shift (negative = upstream)
+    
+    Returns:
+        Shifted density array with zero-filled edges (no wrapping)
+    
+    Example:
+        Input:  [10, 20, 30, 40, 50]
+        Offset: -2 (shift upstream by 2 nt)
+        Output: [30, 40, 50, 0, 0]
+        
+        The value at position i moves to position i+offset.
+        For offset=-2: position 2 moves to position 0, etc.
+    """
+    if offset == 0:
+        return density.copy()
+    
+    # Create output array filled with zeros
+    shifted = np.zeros_like(density, dtype=float)
+    
+    if offset < 0:
+        # Negative offset: shift left (upstream)
+        # Values from positions [-offset:] move to positions [0:len+offset]
+        shifted[:len(density) + offset] = density[-offset:]
+    else:
+        # Positive offset: shift right (downstream)
+        # Values from positions [:-offset] move to positions [offset:]
+        shifted[offset:] = density[:-offset]
+    
+    return shifted
 
 
 def aggregate_density(
-    raw_density_vector: List[float], 
-    method: Literal['mean', 'max', 'sum', 'median'] = 'mean'
-) -> List[float]:
+    nucleotide_density: np.ndarray,
+    method: str = 'mean'
+) -> np.ndarray:
     """
-    Aggregate nucleotide-level density scores to amino acid-level scores.
+    Aggregate nucleotide-level density to amino acid level.
     
-    Each amino acid is encoded by a codon (3 nucleotides). This function groups
-    the raw density scores into triplets and applies an aggregation method to
-    produce one score per amino acid.
+    Triplets of nucleotides (codons) are aggregated using the specified method.
     
     Args:
-        raw_density_vector: List of density scores at nucleotide resolution
-        method: Aggregation method - 'mean', 'max', 'sum', or 'median'
-        
+        nucleotide_density: Array of nucleotide density values (length must be divisible by 3)
+        method: Aggregation method ('mean', 'max', 'sum', 'median')
+    
     Returns:
-        List of aggregated scores, one per amino acid (length = len(raw_density_vector) // 3)
-        
+        Amino acid-level density array (length = len(nucleotide_density) / 3)
+    
     Raises:
-        ValueError: If the length of raw_density_vector is not divisible by 3
-        ValueError: If method is not one of the supported methods
-        
+        ValueError: If nucleotide density length is not divisible by 3
+        ValueError: If method is not supported
+    
     Example:
-        >>> aggregate_density([1, 2, 3, 4, 5, 6], method='mean')
-        [2.0, 5.0]
-        >>> aggregate_density([1, 2, 3, 4, 5, 6], method='max')
-        [3.0, 6.0]
+        Input: [10, 20, 30, 40, 50, 60]  (2 codons)
+        Method: 'mean'
+        Output: [20.0, 50.0]  (mean of each triplet)
     """
-    if len(raw_density_vector) % 3 != 0:
+    if len(nucleotide_density) % 3 != 0:
         raise ValueError(
-            f"Density vector length ({len(raw_density_vector)}) must be divisible by 3 "
-            f"to aggregate codons into amino acids."
+            f"Nucleotide density length ({len(nucleotide_density)}) "
+            f"must be divisible by 3"
         )
     
-    valid_methods = ['mean', 'max', 'sum', 'median']
-    if method not in valid_methods:
-        raise ValueError(f"Method must be one of {valid_methods}, got '{method}'")
+    # Reshape into codons (N/3 rows, 3 columns)
+    n_codons = len(nucleotide_density) // 3
+    codons = nucleotide_density.reshape(n_codons, 3)
     
-    aa_scores = []
+    # Apply aggregation method
+    if method == 'mean':
+        aa_density = np.mean(codons, axis=1)
+    elif method == 'max':
+        aa_density = np.max(codons, axis=1)
+    elif method == 'sum':
+        aa_density = np.sum(codons, axis=1)
+    elif method == 'median':
+        aa_density = np.median(codons, axis=1)
+    else:
+        raise ValueError(
+            f"Unsupported aggregation method: {method}. "
+            f"Use 'mean', 'max', 'sum', or 'median'."
+        )
     
-    # Iterate through the density vector in steps of 3 (codons)
-    for i in range(0, len(raw_density_vector), 3):
-        codon_scores = raw_density_vector[i:i+3]
-        
-        if method == 'mean':
-            aggregated_score = np.mean(codon_scores)
-        elif method == 'max':
-            aggregated_score = np.max(codon_scores)
-        elif method == 'sum':
-            aggregated_score = np.sum(codon_scores)
-        elif method == 'median':
-            aggregated_score = np.median(codon_scores)
-        
-        aa_scores.append(float(aggregated_score))
-    
-    return aa_scores
+    return aa_density
 
 
-def apply_offsets(
-    aa_score_vector: List[float], 
-    offset_values: List[int]
-) -> Dict[int, List[float]]:
+def process_offsets(
+    raw_density: np.ndarray,
+    offsets: List[int],
+    method: str = 'mean'
+) -> Dict[int, np.ndarray]:
     """
-    Apply multiple offset shifts to an amino acid score vector.
+    Process multiple offset values and return amino acid densities for each.
     
-    Ribosome profiling data may have a phase offset due to the ribosome's position
-    relative to the codon being translated. This function applies various offset
-    shifts to test different hypotheses about the ribosome's position.
-    
-    Offset logic:
-    - Positive offset (+N): Shift scores to the RIGHT (later positions)
-      Example: offset=+1 means score at index 0 moves to index 1
-    - Negative offset (-N): Shift scores to the LEFT (earlier positions)
-      Example: offset=-1 means score at index 1 moves to index 0
-    - Positions that fall outside bounds are filled with 0.0
+    This is the main processing function that:
+    1. Applies each offset to the raw nucleotide density
+    2. Aggregates shifted nucleotide density to amino acid level
+    3. Returns a dictionary mapping offset → AA density
     
     Args:
-        aa_score_vector: List of scores at amino acid resolution
-        offset_values: List of integer offsets to apply (in nucleotide positions,
-                       will be converted to amino acid positions by dividing by 3)
-        
+        raw_density: Raw nucleotide-level density array
+        offsets: List of offset values to apply
+        method: Aggregation method for nucleotide→AA conversion
+    
     Returns:
-        Dictionary mapping each offset value to its corresponding shifted vector
-        
+        Dictionary mapping offset value to amino acid density array
+    
     Example:
-        >>> apply_offsets([1.0, 2.0, 3.0], [0, -3])
-        {0: [1.0, 2.0, 3.0], -3: [2.0, 3.0, 0.0]}
+        raw_density = np.array([10, 10, 10, 20, 20, 20])
+        offsets = [0, -3]
+        method = 'mean'
+        
+        Result:
+        {
+            0: [10.0, 20.0],      # No shift: codon1=(10,10,10), codon2=(20,20,20)
+            -3: [16.67, 6.67]     # Shift -3: codon1=(20,20,20), codon2=(0,0,0)
+        }
     """
-    result = {}
+    results = {}
     
-    for offset_nt in offset_values:
-        # Convert nucleotide offset to amino acid offset
-        # offset_nt is in nucleotide positions (e.g., -15 nt = -5 aa)
-        offset_aa = offset_nt // 3
+    for offset in offsets:
+        # Step 1: Shift nucleotide density
+        shifted_nt_density = shift_nucleotide_density(raw_density, offset)
         
-        # Create a new vector filled with zeros
-        shifted_vector = [0.0] * len(aa_score_vector)
+        # Step 2: Aggregate to amino acid level
+        aa_density = aggregate_density(shifted_nt_density, method=method)
         
-        # Apply the shift
-        for i in range(len(aa_score_vector)):
-            # Calculate the source index
-            source_index = i - offset_aa
-            
-            # If source index is within bounds, copy the score
-            if 0 <= source_index < len(aa_score_vector):
-                shifted_vector[i] = aa_score_vector[source_index]
-            # Otherwise, leave as 0.0 (already initialized)
-        
-        result[offset_nt] = shifted_vector
+        # Store result
+        results[offset] = aa_density
     
-    return result
+    return results
 
 
-__all__ = ["aggregate_density", "apply_offsets"]
+# Legacy function name for backward compatibility
+def apply_offsets(
+    amino_acid_scores: np.ndarray,
+    offsets: List[int]
+) -> Dict[int, np.ndarray]:
+    """
+    DEPRECATED: This function is kept for backward compatibility only.
+    
+    New code should use process_offsets() which correctly applies offsets
+    at the nucleotide level before aggregation.
+    
+    This function incorrectly applies offsets at the amino acid level.
+    """
+    import warnings
+    warnings.warn(
+        "apply_offsets() is deprecated and applies offsets incorrectly at the AA level. "
+        "Use process_offsets() instead, which applies offsets at the NT level.",
+        DeprecationWarning,
+        stacklevel=2
+    )
+    
+    results = {}
+    for offset in offsets:
+        # Old (incorrect) logic: shift AA scores
+        shifted = np.zeros_like(amino_acid_scores, dtype=float)
+        aa_offset = offset // 3
+        
+        if aa_offset == 0:
+            shifted = amino_acid_scores.copy()
+        elif aa_offset < 0:
+            shifted[:len(amino_acid_scores) + aa_offset] = amino_acid_scores[-aa_offset:]
+        else:
+            shifted[aa_offset:] = amino_acid_scores[:-aa_offset]
+        
+        results[offset] = shifted
+    
+    return results

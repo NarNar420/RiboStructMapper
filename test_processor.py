@@ -1,197 +1,301 @@
+#!/usr/bin/env python3
 """
-Test script for the Data Processor module.
+Test suite for the Data Processor module.
 
-This script verifies that:
-1. Density aggregation works correctly with different methods
-2. Offset application shifts vectors properly
-3. Boundary conditions are handled correctly (filling with 0.0)
+Tests nucleotide-level offset application and aggregation to amino acids.
 """
 
-from processor import aggregate_density, apply_offsets
+import numpy as np
+import pytest
+from processor import shift_nucleotide_density, aggregate_density, process_offsets
 
 
-def test_aggregate_density():
-    """Test the aggregate_density function with various methods."""
-    print("="*60)
-    print("Testing aggregate_density()")
-    print("="*60)
+def test_shift_nucleotide_density_no_offset():
+    """Test that zero offset returns unchanged array."""
+    density = np.array([10.0, 20.0, 30.0, 40.0, 50.0, 60.0])
+    shifted = shift_nucleotide_density(density, 0)
     
-    # Test vector: [1, 2, 3, 4, 5, 6] represents 2 codons
-    test_vector = [1, 2, 3, 4, 5, 6]
-    
-    print(f"\nInput vector (6 nucleotides = 2 codons): {test_vector}")
-    print(f"  Codon 1: {test_vector[0:3]} = [1, 2, 3]")
-    print(f"  Codon 2: {test_vector[3:6]} = [4, 5, 6]")
-    
-    # Test mean aggregation
-    print(f"\n[1] Testing method='mean':")
-    result_mean = aggregate_density(test_vector, method='mean')
-    expected_mean = [2.0, 5.0]  # (1+2+3)/3 = 2.0, (4+5+6)/3 = 5.0
-    print(f"    Result: {result_mean}")
-    print(f"    Expected: {expected_mean}")
-    assert result_mean == expected_mean, f"Mean aggregation failed: {result_mean} != {expected_mean}"
-    print(f"    ✓ PASSED")
-    
-    # Test max aggregation
-    print(f"\n[2] Testing method='max':")
-    result_max = aggregate_density(test_vector, method='max')
-    expected_max = [3.0, 6.0]  # max(1,2,3) = 3.0, max(4,5,6) = 6.0
-    print(f"    Result: {result_max}")
-    print(f"    Expected: {expected_max}")
-    assert result_max == expected_max, f"Max aggregation failed: {result_max} != {expected_max}"
-    print(f"    ✓ PASSED")
-    
-    # Test sum aggregation
-    print(f"\n[3] Testing method='sum':")
-    result_sum = aggregate_density(test_vector, method='sum')
-    expected_sum = [6.0, 15.0]  # 1+2+3 = 6.0, 4+5+6 = 15.0
-    print(f"    Result: {result_sum}")
-    print(f"    Expected: {expected_sum}")
-    assert result_sum == expected_sum, f"Sum aggregation failed: {result_sum} != {expected_sum}"
-    print(f"    ✓ PASSED")
-    
-    # Test median aggregation
-    print(f"\n[4] Testing method='median':")
-    result_median = aggregate_density(test_vector, method='median')
-    expected_median = [2.0, 5.0]  # median(1,2,3) = 2.0, median(4,5,6) = 5.0
-    print(f"    Result: {result_median}")
-    print(f"    Expected: {expected_median}")
-    assert result_median == expected_median, f"Median aggregation failed: {result_median} != {expected_median}"
-    print(f"    ✓ PASSED")
-    
-    print(f"\n{'='*60}")
-    print("All aggregation tests PASSED!")
-    print(f"{'='*60}\n")
+    np.testing.assert_array_equal(shifted, density)
+    print("✓ Zero offset: no change")
 
 
-def test_apply_offsets():
-    """Test the apply_offsets function with various offset values."""
-    print("="*60)
-    print("Testing apply_offsets()")
-    print("="*60)
+def test_shift_nucleotide_density_negative():
+    """Test negative offset (upstream shift)."""
+    # Original: [10, 20, 30, 40, 50, 60]
+    # Offset -2: shift left by 2
+    # Result: [30, 40, 50, 60, 0, 0]
+    density = np.array([10.0, 20.0, 30.0, 40.0, 50.0, 60.0])
+    shifted = shift_nucleotide_density(density, -2)
     
-    # Start with the aggregated vector from previous test
-    aa_vector = [2.0, 5.0]
-    print(f"\nInput AA vector: {aa_vector}")
-    print(f"  Index 0: {aa_vector[0]}")
-    print(f"  Index 1: {aa_vector[1]}")
-    
-    # Test offset 0 (no shift)
-    print(f"\n[1] Testing offset=0 (no shift):")
-    result = apply_offsets(aa_vector, [0])
-    print(f"    Result: {result[0]}")
-    print(f"    Expected: {aa_vector}")
-    assert result[0] == aa_vector, f"Offset 0 failed: {result[0]} != {aa_vector}"
-    print(f"    ✓ PASSED")
-    
-    # Test offset -3 (shift left by 1 AA = -3 nucleotides)
-    print(f"\n[2] Testing offset=-3 (shift left by 1 AA):")
-    print(f"    Logic: Index 1 moves to index 0, index 0 is filled with 0.0")
-    result = apply_offsets(aa_vector, [-3])
-    expected = [5.0, 0.0]  # Shift left: position 1→0, position 0 gets 0.0
-    print(f"    Result: {result[-3]}")
-    print(f"    Expected: {expected}")
-    assert result[-3] == expected, f"Offset -3 failed: {result[-3]} != {expected}"
-    print(f"    ✓ PASSED")
-    
-    # Test offset +3 (shift right by 1 AA = +3 nucleotides)
-    print(f"\n[3] Testing offset=+3 (shift right by 1 AA):")
-    print(f"    Logic: Index 0 moves to index 1, index 1 is filled with 0.0")
-    result = apply_offsets(aa_vector, [3])
-    expected = [0.0, 2.0]  # Shift right: position 0→1, position 1 gets 0.0
-    print(f"    Result: {result[3]}")
-    print(f"    Expected: {expected}")
-    assert result[3] == expected, f"Offset +3 failed: {result[3]} != {expected}"
-    print(f"    ✓ PASSED")
-    
-    # Test multiple offsets at once
-    print(f"\n[4] Testing multiple offsets: [0, -3, 3]:")
-    result = apply_offsets(aa_vector, [0, -3, 3])
-    print(f"    Offset 0: {result[0]}")
-    print(f"    Offset -3: {result[-3]}")
-    print(f"    Offset +3: {result[3]}")
-    assert len(result) == 3, f"Expected 3 results, got {len(result)}"
-    assert result[0] == [2.0, 5.0], "Offset 0 in multiple test failed"
-    assert result[-3] == [5.0, 0.0], "Offset -3 in multiple test failed"
-    assert result[3] == [0.0, 2.0], "Offset +3 in multiple test failed"
-    print(f"    ✓ PASSED")
-    
-    # Test with a longer vector
-    print(f"\n[5] Testing with longer vector:")
-    long_vector = [1.0, 2.0, 3.0, 4.0, 5.0]
-    print(f"    Input: {long_vector}")
-    result = apply_offsets(long_vector, [-6])  # -6 nt = -2 AA
-    expected = [3.0, 4.0, 5.0, 0.0, 0.0]  # Shift left by 2
-    print(f"    Offset -6 (-2 AA): {result[-6]}")
-    print(f"    Expected: {expected}")
-    assert result[-6] == expected, f"Long vector offset failed: {result[-6]} != {expected}"
-    print(f"    ✓ PASSED")
-    
-    print(f"\n{'='*60}")
-    print("All offset tests PASSED!")
-    print(f"{'='*60}\n")
+    expected = np.array([30.0, 40.0, 50.0, 60.0, 0.0, 0.0])
+    np.testing.assert_array_equal(shifted, expected)
+    print("✓ Negative offset -2: shifted upstream correctly")
 
 
-def test_integration():
-    """Test the full pipeline: raw density → aggregation → offset."""
-    print("="*60)
-    print("Integration Test: Full Pipeline")
-    print("="*60)
+def test_shift_nucleotide_density_positive():
+    """Test positive offset (downstream shift)."""
+    # Original: [10, 20, 30, 40, 50, 60]
+    # Offset +2: shift right by 2
+    # Result: [0, 0, 10, 20, 30, 40]
+    density = np.array([10.0, 20.0, 30.0, 40.0, 50.0, 60.0])
+    shifted = shift_nucleotide_density(density, 2)
     
-    # Simulate raw density data for 5 amino acids (15 nucleotides)
-    raw_density = [
-        10, 12, 11,  # Codon 1
-        20, 22, 21,  # Codon 2
-        30, 32, 31,  # Codon 3
-        40, 42, 41,  # Codon 4
-        50, 52, 51   # Codon 5
-    ]
+    expected = np.array([0.0, 0.0, 10.0, 20.0, 30.0, 40.0])
+    np.testing.assert_array_equal(shifted, expected)
+    print("✓ Positive offset +2: shifted downstream correctly")
+
+
+def test_shift_nucleotide_density_by_codon():
+    """Test shift by one codon (3 nucleotides)."""
+    # Original: [10, 10, 10, 20, 20, 20]  (2 codons)
+    # Offset -3: shift left by 3 (one codon)
+    # Result: [20, 20, 20, 0, 0, 0]
+    density = np.array([10.0, 10.0, 10.0, 20.0, 20.0, 20.0])
+    shifted = shift_nucleotide_density(density, -3)
     
-    print(f"\n[1] Raw density (15 nt = 5 codons):")
-    for i in range(0, 15, 3):
-        codon_num = i // 3 + 1
-        print(f"    Codon {codon_num}: {raw_density[i:i+3]}")
+    expected = np.array([20.0, 20.0, 20.0, 0.0, 0.0, 0.0])
+    np.testing.assert_array_equal(shifted, expected)
+    print("✓ Offset -3 (one codon): shifted correctly")
+
+
+def test_aggregate_density_mean():
+    """Test mean aggregation method."""
+    # Two codons: [10, 20, 30] and [40, 50, 60]
+    # Means: 20.0 and 50.0
+    nt_density = np.array([10.0, 20.0, 30.0, 40.0, 50.0, 60.0])
+    aa_density = aggregate_density(nt_density, method='mean')
+    
+    expected = np.array([20.0, 50.0])
+    np.testing.assert_array_almost_equal(aa_density, expected)
+    print("✓ Mean aggregation: correct")
+
+
+def test_aggregate_density_max():
+    """Test max aggregation method."""
+    nt_density = np.array([10.0, 20.0, 30.0, 40.0, 50.0, 60.0])
+    aa_density = aggregate_density(nt_density, method='max')
+    
+    expected = np.array([30.0, 60.0])
+    np.testing.assert_array_almost_equal(aa_density, expected)
+    print("✓ Max aggregation: correct")
+
+
+def test_aggregate_density_sum():
+    """Test sum aggregation method."""
+    nt_density = np.array([10.0, 20.0, 30.0, 40.0, 50.0, 60.0])
+    aa_density = aggregate_density(nt_density, method='sum')
+    
+    expected = np.array([60.0, 150.0])
+    np.testing.assert_array_almost_equal(aa_density, expected)
+    print("✓ Sum aggregation: correct")
+
+
+def test_aggregate_density_median():
+    """Test median aggregation method."""
+    nt_density = np.array([10.0, 20.0, 30.0, 40.0, 50.0, 60.0])
+    aa_density = aggregate_density(nt_density, method='median')
+    
+    expected = np.array([20.0, 50.0])
+    np.testing.assert_array_almost_equal(aa_density, expected)
+    print("✓ Median aggregation: correct")
+
+
+def test_aggregate_density_invalid_length():
+    """Test that non-divisible-by-3 length raises error."""
+    nt_density = np.array([10.0, 20.0, 30.0, 40.0])  # Length 4
+    
+    with pytest.raises(ValueError, match="must be divisible by 3"):
+        aggregate_density(nt_density)
+    
+    print("✓ Invalid length: error raised correctly")
+
+
+def test_aggregate_density_invalid_method():
+    """Test that invalid method raises error."""
+    nt_density = np.array([10.0, 20.0, 30.0])
+    
+    with pytest.raises(ValueError, match="Unsupported aggregation method"):
+        aggregate_density(nt_density, method='invalid')
+    
+    print("✓ Invalid method: error raised correctly")
+
+
+def test_critical_offset_before_aggregation():
+    """
+    CRITICAL TEST: Verify offsets are applied BEFORE aggregation.
+    
+    This test proves we're doing nucleotide-level shifting, not AA-level.
+    
+    Setup:
+    - 6 nucleotides: [10, 10, 10, 20, 20, 20]
+    - 2 codons: Met (10,10,10) and Pro (20,20,20)
+    
+    Offset -1 (shift left by 1 nt):
+    - Shifted NT: [10, 10, 20, 20, 20, 0]
+    - New codons: (10,10,20) and (20,20,0)
+    - AA means: 13.33 and 13.33
+    
+    If we incorrectly applied offset at AA level:
+    - AA before: [10, 20]
+    - Offset -1 nt = -0.33 AA (rounds to 0)
+    - Would get: [10, 20] (no change!)
+    
+    This test MUST pass to prove correctness.
+    """
+    raw_density = np.array([10.0, 10.0, 10.0, 20.0, 20.0, 20.0])
+    
+    # Apply offset -1 at nucleotide level
+    shifted_nt = shift_nucleotide_density(raw_density, -1)
+    expected_shifted = np.array([10.0, 10.0, 20.0, 20.0, 20.0, 0.0])
+    np.testing.assert_array_equal(shifted_nt, expected_shifted)
     
     # Aggregate to AA level
-    print(f"\n[2] Aggregate with method='mean':")
-    aa_scores = aggregate_density(raw_density, method='mean')
-    print(f"    Result: {aa_scores}")
-    print(f"    Length: {len(aa_scores)} amino acids")
+    aa_density = aggregate_density(shifted_nt, method='mean')
+    expected_aa = np.array([40.0/3.0, 40.0/3.0])  # 13.33, 13.33
+    np.testing.assert_array_almost_equal(aa_density, expected_aa, decimal=2)
     
-    # Apply offsets
-    print(f"\n[3] Apply offsets: [0, -15, -30]:")
-    offsets = [0, -15, -30]  # 0, -5 AA, -10 AA
-    offset_results = apply_offsets(aa_scores, offsets)
+    print("✓ CRITICAL: Offset -1 applied at NT level BEFORE aggregation")
+    print(f"  Raw NT: {raw_density}")
+    print(f"  Shifted NT: {shifted_nt}")
+    print(f"  AA density: {aa_density}")
+
+
+def test_process_offsets_multiple():
+    """Test processing multiple offsets."""
+    raw_density = np.array([10.0, 10.0, 10.0, 20.0, 20.0, 20.0])
+    offsets = [0, -3]
     
-    for offset_nt in offsets:
-        offset_aa = offset_nt // 3
-        print(f"\n    Offset {offset_nt} nt ({offset_aa} AA):")
-        print(f"      {offset_results[offset_nt]}")
+    results = process_offsets(raw_density, offsets, method='mean')
     
-    print(f"\n{'='*60}")
-    print("Integration test PASSED!")
-    print(f"{'='*60}\n")
+    # Offset 0: no shift
+    # Codons: (10,10,10) and (20,20,20)
+    # Means: 10.0 and 20.0
+    expected_0 = np.array([10.0, 20.0])
+    np.testing.assert_array_almost_equal(results[0], expected_0)
+    
+    # Offset -3: shift left by one codon
+    # Shifted: [20, 20, 20, 0, 0, 0]
+    # Codons: (20,20,20) and (0,0,0)
+    # Means: 20.0 and 0.0
+    expected_minus3 = np.array([20.0, 0.0])
+    np.testing.assert_array_almost_equal(results[-3], expected_minus3)
+    
+    print("✓ Multiple offsets processed correctly")
+
+
+def test_process_offsets_different_methods():
+    """Test that process_offsets works with different aggregation methods."""
+    raw_density = np.array([10.0, 20.0, 30.0, 40.0, 50.0, 60.0])
+    
+    # Test with max
+    results_max = process_offsets(raw_density, [0], method='max')
+    expected = np.array([30.0, 60.0])
+    np.testing.assert_array_almost_equal(results_max[0], expected)
+    
+    # Test with sum
+    results_sum = process_offsets(raw_density, [0], method='sum')
+    expected = np.array([60.0, 150.0])
+    np.testing.assert_array_almost_equal(results_sum[0], expected)
+    
+    print("✓ process_offsets works with different methods")
+
+
+def test_edge_case_large_offset():
+    """Test offset larger than array length."""
+    density = np.array([10.0, 20.0, 30.0])
+    
+    # Offset -10 (larger than array)
+    shifted = shift_nucleotide_density(density, -10)
+    expected = np.array([0.0, 0.0, 0.0])  # All zeros
+    np.testing.assert_array_equal(shifted, expected)
+    
+    print("✓ Large offset: all zeros (correct)")
+
+
+def test_real_world_example():
+    """
+    Test with realistic ribosome profiling data.
+    
+    Simulates P-site offset of -12 nucleotides.
+    """
+    # 15 nucleotides (5 codons)
+    raw_density = np.array([
+        5.0, 10.0, 15.0,   # Codon 1
+        20.0, 25.0, 30.0,  # Codon 2
+        35.0, 40.0, 45.0,  # Codon 3
+        50.0, 55.0, 60.0,  # Codon 4
+        65.0, 70.0, 75.0   # Codon 5
+    ])
+    
+    # Apply P-site offset (-12 nt = -4 codons)
+    results = process_offsets(raw_density, [0, -12], method='mean')
+    
+    # Offset 0: means of each codon
+    expected_0 = np.array([10.0, 25.0, 40.0, 55.0, 70.0])
+    np.testing.assert_array_almost_equal(results[0], expected_0)
+    
+    # Offset -12: shift left by 12
+    # Shifted: [65, 70, 75, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    # Codons: (65,70,75), (0,0,0), (0,0,0), (0,0,0), (0,0,0)
+    # Means: 70.0, 0.0, 0.0, 0.0, 0.0
+    expected_minus12 = np.array([70.0, 0.0, 0.0, 0.0, 0.0])
+    np.testing.assert_array_almost_equal(results[-12], expected_minus12)
+    
+    print("✓ Real-world P-site offset (-12): correct")
 
 
 def main():
     """Run all tests."""
-    print("\n" + "="*60)
-    print("RiboStructMapper - Data Processor Test Suite")
-    print("="*60 + "\n")
+    print("=" * 70)
+    print("PROCESSOR MODULE TEST SUITE (NEW LOGIC)")
+    print("=" * 70)
+    print()
     
-    try:
-        test_aggregate_density()
-        test_apply_offsets()
-        test_integration()
-        
-        print("\n" + "="*60)
-        print("ALL TESTS PASSED! ✓")
-        print("="*60 + "\n")
-        
-    except AssertionError as e:
-        print(f"\n❌ TEST FAILED: {e}\n")
-        raise
+    tests = [
+        ("Zero offset", test_shift_nucleotide_density_no_offset),
+        ("Negative offset", test_shift_nucleotide_density_negative),
+        ("Positive offset", test_shift_nucleotide_density_positive),
+        ("Shift by codon", test_shift_nucleotide_density_by_codon),
+        ("Mean aggregation", test_aggregate_density_mean),
+        ("Max aggregation", test_aggregate_density_max),
+        ("Sum aggregation", test_aggregate_density_sum),
+        ("Median aggregation", test_aggregate_density_median),
+        ("Invalid length error", test_aggregate_density_invalid_length),
+        ("Invalid method error", test_aggregate_density_invalid_method),
+        ("⭐ CRITICAL: NT-level offset", test_critical_offset_before_aggregation),
+        ("Multiple offsets", test_process_offsets_multiple),
+        ("Different methods", test_process_offsets_different_methods),
+        ("Large offset edge case", test_edge_case_large_offset),
+        ("Real-world P-site", test_real_world_example),
+    ]
+    
+    passed = 0
+    failed = 0
+    
+    for name, test_func in tests:
+        try:
+            test_func()
+            passed += 1
+        except Exception as e:
+            print(f"✗ FAILED: {name}")
+            print(f"  Error: {e}")
+            import traceback
+            traceback.print_exc()
+            failed += 1
+        print()
+    
+    print("=" * 70)
+    print(f"RESULTS: {passed}/{len(tests)} tests passed")
+    if failed > 0:
+        print(f"❌ {failed} tests FAILED")
+    else:
+        print("✅ ALL TESTS PASSED")
+    print("=" * 70)
+    
+    return failed == 0
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    success = main()
+    sys.exit(0 if success else 1)

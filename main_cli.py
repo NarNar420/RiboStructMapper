@@ -21,7 +21,7 @@ from Bio.PDB import PDBParser
 # Import all modules
 from parser import parse_genomic_data, parse_pdb_structure, parse_ribo_density
 from alignment import translate_sequence, align_sequences
-from processor import aggregate_density, apply_offsets
+from processor import process_offsets
 from injector import inject_bfactors
 
 
@@ -65,9 +65,8 @@ def run_pipeline(
         3. Parse PDB structure → amino acid sequence + structure object
         4. Translate genomic sequence → genomic amino acids
         5. Align genomic AA with PDB AA → residue mapping
-        6. Aggregate density nucleotide → amino acid level
-        7. Apply offsets → offset-specific score vectors
-        8. Inject B-factors for each offset → output PDB files
+        6. Process offsets: shift NT density + aggregate to AA level
+        7. Inject B-factors for each offset → output PDB files
     """
     print("=" * 70)
     print("RIBOSTRUCTMAPPER - END-TO-END PIPELINE")
@@ -144,29 +143,23 @@ def run_pipeline(
     print(f"    Coverage: {len(mapping_index)/len(genomic_aa)*100:.1f}%")
     
     # ========================================================================
-    # STEP 6: Aggregate Density (Nucleotide → Amino Acid)
+    # STEP 6: Process Offsets (NT-level shift + AA aggregation)
     # ========================================================================
-    print("\n[STEP 6] Aggregating density scores...")
+    print(f"\n[STEP 6] Processing offsets at nucleotide level...")
+    print(f"  Offsets: {offsets}")
+    print(f"  Aggregation method: {aggregation_method}")
     
-    aa_scores = aggregate_density(list(raw_density), method=aggregation_method)
-    
-    print(f"  ✓ Aggregated: {len(aa_scores)} amino acid scores")
-    print(f"    Method: {aggregation_method}")
-    print(f"    Score range: [{min(aa_scores):.1f}, {max(aa_scores):.1f}]")
-    
-    # ========================================================================
-    # STEP 7: Apply Offsets
-    # ========================================================================
-    print(f"\n[STEP 7] Applying offsets: {offsets}...")
-    
-    offset_scores = apply_offsets(aa_scores, offsets)
+    # CRITICAL: Apply offsets BEFORE aggregation (at NT level, not AA level)
+    offset_scores = process_offsets(raw_density, offsets, method=aggregation_method)
     
     print(f"  ✓ Generated {len(offset_scores)} offset versions")
+    for offset, scores in offset_scores.items():
+        print(f"    Offset {offset:4d} nt: {len(scores)} AA scores, range [{scores.min():.1f}, {scores.max():.1f}]")
     
     # ========================================================================
-    # STEP 8: Inject B-factors and Save Output Files
+    # STEP 7: Inject B-factors and Save Output Files
     # ========================================================================
-    print(f"\n[STEP 8] Injecting B-factors and saving output files...")
+    print(f"\n[STEP 7] Injecting B-factors and saving output files...")
     
     output_files = {}
     
