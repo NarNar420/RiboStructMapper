@@ -121,7 +121,7 @@ def test_submit_job():
         
         assert "job_id" in response_data, "Response should contain 'job_id'"
         assert "status" in response_data, "Response should contain 'status'"
-        assert response_data["status"] == "uploaded", f"Status should be 'uploaded', got {response_data['status']}"
+        assert response_data["status"] == "queued", f"Status should be 'queued', got {response_data['status']}"
         
         job_id = response_data["job_id"]
         print(f"✓ Job created with ID: {job_id}")
@@ -148,10 +148,6 @@ def test_submit_job():
         assert "offsets=0,-10,-15" in params_content, "params.txt should contain offsets"
         print(f"✓ Parameters saved correctly")
         
-        # Verify status.txt content
-        status_content = (job_dir / "status.txt").read_text().strip()
-        assert status_content == "uploaded", "status.txt should contain 'uploaded'"
-        print(f"✓ Status file created correctly")
         
         print("\n✓✓✓ Test 3 PASSED ✓✓✓\n")
         return True

@@ -9,11 +9,12 @@ import os
 import uuid
 import shutil
 import traceback
+import zipfile
 from pathlib import Path
 from typing import Optional
 
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel
 
 # Import the pipeline function
@@ -38,6 +39,13 @@ JOBS_DIR.mkdir(exist_ok=True)
 
 class JobResponse(BaseModel):
     """Response model for job submission."""
+    job_id: str
+    status: str
+    message: Optional[str] = None
+
+
+class StatusResponse(BaseModel):
+    """Response model for job status."""
     job_id: str
     status: str
     message: Optional[str] = None
@@ -245,6 +253,136 @@ async def health_check():
         "jobs_directory": str(JOBS_DIR),
         "jobs_directory_exists": JOBS_DIR.exists()
     }
+
+
+@app.get("/status/{job_id}", response_model=StatusResponse)
+async def get_job_status(job_id: str) -> StatusResponse:
+    """
+    Get the status of a job.
+    
+    Args:
+        job_id: The unique job identifier
+    
+    Returns:
+        StatusResponse with current job status
+    
+    Possible status values:
+        - "not_found": Job does not exist
+        - "uploaded": Files uploaded, awaiting processing
+        - "queued": Job queued for background processing
+        - "processing": Currently being processed
+        - "completed": Processing finished successfully
+        - "failed": Processing encountered an error
+    
+    Example:
+        GET /status/a3b8d1b6-0b3b-4b1a-9c1a-1a2b3c4d5e6f
+    """
+    job_dir = JOBS_DIR / job_id
+    
+    # Check if job exists
+    if not job_dir.exists():
+        raise HTTPException(
+            status_code=404,
+            detail=f"Job {job_id} not found"
+        )
+    
+    # Read status file
+    status_file = job_dir / "status.txt"
+    
+    if not status_file.exists():
+        return StatusResponse(
+            job_id=job_id,
+            status="unknown",
+            message="Status file not found"
+        )
+    
+    status = status_file.read_text().strip()
+    
+    # Check for error file if status is failed
+    message = None
+    if status == "failed":
+        error_file = job_dir / "error.txt"
+        if error_file.exists():
+            error_content = error_file.read_text()
+            # Extract first line of error
+            first_line = error_content.split("\n")[0]
+            message = first_line
+    
+    return StatusResponse(
+        job_id=job_id,
+        status=status,
+        message=message
+    )
+
+
+@app.get("/download/{job_id}")
+async def download_results(job_id: str):
+    """
+    Download the results of a completed job as a ZIP file.
+    
+    Args:
+        job_id: The unique job identifier
+    
+    Returns:
+        FileResponse containing a ZIP archive of all output PDB files
+    
+    Raises:
+        HTTPException 404: Job not found
+        HTTPException 400: Job not completed yet
+    
+    Example:
+        GET /download/a3b8d1b6-0b3b-4b1a-9c1a-1a2b3c4d5e6f
+    """
+    job_dir = JOBS_DIR / job_id
+    
+    # Check if job exists
+    if not job_dir.exists():
+        raise HTTPException(
+            status_code=404,
+            detail=f"Job {job_id} not found"
+        )
+    
+    # Check status
+    status_file = job_dir / "status.txt"
+    
+    if not status_file.exists():
+        raise HTTPException(
+            status_code=400,
+            detail="Job status unknown"
+        )
+    
+    status = status_file.read_text().strip()
+    
+    if status != "completed":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Job not completed yet. Current status: {status}"
+        )
+    
+    # Find all output PDB files
+    output_files = list(job_dir.glob("output_offset_*.pdb"))
+    
+    if not output_files:
+        raise HTTPException(
+            status_code=404,
+            detail="No output files found for this job"
+        )
+    
+    # Create ZIP file
+    zip_filename = f"{job_id}_results.zip"
+    zip_path = job_dir / zip_filename
+    
+    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for output_file in output_files:
+            # Add file to zip with just the filename (not full path)
+            zipf.write(output_file, arcname=output_file.name)
+    
+    # Return the ZIP file
+    return FileResponse(
+        path=str(zip_path),
+        media_type="application/zip",
+        filename=zip_filename
+    )
 
 
 # ============================================================================
