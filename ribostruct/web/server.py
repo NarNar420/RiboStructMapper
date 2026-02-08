@@ -104,11 +104,6 @@ def process_job(job_id: str) -> None:
         # Define file paths
         pdb_path = str(job_dir / "input.pdb")
         fasta_path = str(job_dir / "input.fasta")
-        
-        # GTF is optional - check if it exists
-        gtf_file_path = job_dir / "input.gtf"
-        gtf_path = str(gtf_file_path) if gtf_file_path.exists() else None
-        
         bedgraph_path = str(job_dir / "input.bedgraph")
         
         # Parse parameters
@@ -131,7 +126,6 @@ def process_job(job_id: str) -> None:
         output_files = run_pipeline(
             pdb_path=pdb_path,
             fasta_path=fasta_path,
-            gtf_path=gtf_path,
             bedgraph_path=bedgraph_path,
             offsets=offsets,
             aggregation_method='mean',
@@ -253,11 +247,11 @@ async def root():
 
 
 @app.post("/submit_job", response_model=JobResponse)
+@app.post("/submit_job", response_model=JobResponse)
 async def submit_job(
     background_tasks: BackgroundTasks,
     pdb_file: UploadFile = File(..., description="PDB structure file"),
-    fasta_file: UploadFile = File(..., description="FASTA file (genomic or CDS)"),
-    gtf_file: Optional[UploadFile] = File(None, description="GTF/GFF annotation file (optional)"),
+    fasta_file: UploadFile = File(..., description="FASTA file (header format: >ID Chrom:Start..End)"),
     density_file: UploadFile = File(..., description="bedGraph density file"),
     offsets: str = Form(..., description="Comma-separated offset values (e.g., '0,-10,-15')")
 ) -> JobResponse:
@@ -265,27 +259,15 @@ async def submit_job(
     Submit a new job for processing.
     
     This endpoint accepts required input files and creates a new job.
-    GTF file is optional - if not provided, FASTA is assumed to be CDS.
     
     Args:
         pdb_file: PDB structure file
-        fasta_file: FASTA file (genomic with GTF, or CDS without GTF)
-        gtf_file: Optional gene annotation in GTF/GFF format
+        fasta_file: FASTA file with coordinate header
         density_file: Ribosome density in bedGraph format
         offsets: Comma-separated offset values (e.g., "0,-10,-15")
     
     Returns:
         JobResponse with job_id and status
-    
-    Example:
-        ```
-        curl -X POST "http://localhost:8000/submit_job" \\
-          -F "pdb_file=@protein.pdb" \\
-          -F "fasta_file=@genome.fasta" \\
-          -F "gtf_file=@annotation.gtf" \\
-          -F "density_file=@density.bedgraph" \\
-          -F "offsets=0,-10,-15"
-        ```
     """
     try:
         # Generate unique job ID
@@ -298,11 +280,6 @@ async def submit_job(
         # Save uploaded files
         save_upload_file(pdb_file, job_dir / "input.pdb")
         save_upload_file(fasta_file, job_dir / "input.fasta")
-        
-        # GTF is optional
-        if gtf_file:
-            save_upload_file(gtf_file, job_dir / "input.gtf")
-        
         save_upload_file(density_file, job_dir / "input.bedgraph")
         
         # Save parameters

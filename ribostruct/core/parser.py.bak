@@ -89,83 +89,158 @@ def _find_seq_record(key: str, seq_records: dict):
     return None
 
 
-import re
-
-def parse_genomic_data(fasta_path: str) -> Tuple[str, List[Tuple[str, int]], int, str, int]:
+def parse_genomic_data(fasta_path: str, gtf_path: Optional[str] = None, gene_id: Optional[str] = None, transcript_id: Optional[str] = None) -> Tuple[str, List[Tuple[str, int]], int]:
     """
-    Parse FASTA to extract CDS sequence and genomic coordinates from header.
-    
-    Expected Header Format:
-        >GeneID Chromosome:Start..End
-        Example: >YAL001C I:100..500
-    
+    Parse FASTA (and optionally GTF) to extract the CDS nucleotide sequence and a coordinate map.
+
     Args:
-        fasta_path: Path to FASTA file.
-        
+        fasta_path: Path to FASTA file containing genomic sequences or CDS sequences.
+        gtf_path: Optional path to GTF/GFF file containing CDS features. 
+                  If None, FASTA is assumed to contain CDS sequences directly.
+        gene_id: Optional gene_id to select. If provided with GTF, only transcripts belonging 
+                 to this gene are considered. If provided without GTF, selects that sequence ID.
+        transcript_id: Optional transcript_id to select (used with GTF mode).
+
     Returns:
-        tuple:
-            - nucleotide_seq: Sanitized CDS sequence (divisible by 3, starts with ATG)
-            - coordinate_map: List of (chrom, genomic_pos) for each nucleotide
-            - start_offset: Number of nucleotides removed from start of raw sequence
-            - chrom: Chromosome name (e.g., 'I')
-            - genomic_start: 1-based genomic start coordinate of the sanitized sequence
-            
+        tuple: (nucleotide_sequence: str, 
+                coordinate_map: list of (seqname, genomic_pos), 
+                start_offset: int - number of nucleotides removed from start during sanitization)
+
     Raises:
-        ValueError: If header format is invalid or no ATG found.
+        FileNotFoundError: if FASTA file is missing.
+        ValueError: if no sequences found or specified sequence not found.
     """
     if not os.path.exists(fasta_path):
         raise FileNotFoundError(f"FASTA file not found: {fasta_path}")
-    
-    # Read the first sequence record
-    # We only handle single-sequence FASTA files for now as per pipeline design
-    try:
-        record = next(SeqIO.parse(fasta_path, "fasta"))
-    except StopIteration:
+
+    seq_records = {rec.id: rec for rec in SeqIO.parse(fasta_path, "fasta")}
+    if not seq_records:
         raise ValueError(f"No sequences found in FASTA: {fasta_path}")
-    
-    header = record.description
-    
-    # Parse header: >ID Chrom:Start..End
-    # Regex captures: (ID) (Chrom):(Start)..(End)
-    # Example: >YAL003W I:142174..142253
-    # Note: SeqIO separates ID and description. record.description is the full header line after '>'
-    # But usually record.id is the first word.
-    # Let's parse the full description line.
-    
-    # Pattern: ID followed by space, then Chrom:Start..End
-    # We'll allow flexible spacing
-    match = re.search(r'(\S+)\s+(\S+):(\d+)\.\.(\d+)', header)
-    
-    if not match:
-        raise ValueError(
-            f"FASTA header '{header}' does not match required format: '>ID Chrom:Start..End' "
-            "(e.g., '>YAL001C I:100..500')"
-        )
-    
-    gene_id, chrom, raw_start_str, raw_end_str = match.groups()
-    raw_start = int(raw_start_str)
-    
-    nucleotide_seq_raw = str(record.seq).upper()
-    
-    # Sanitize sequence (find ATG, trim length)
+
+    # MODE 2: FASTA-only mode (no GTF provided - assume FASTA contains CDS)
+    if gtf_path is None:
+        # Select sequence by gene_id if provided, otherwise use first sequence
+        if gene_id:
+            seq_rec = seq_records.get(gene_id)
+            if seq_rec is None:
+                raise ValueError(f"Sequence ID '{gene_id}' not found in FASTA. Available: {', '.join(seq_records.keys())}")
+        else:
+            # Use first sequence in FASTA
+            seq_rec = list(seq_records.values())[0]
+        
+        nucleotide_seq_raw = str(seq_rec.seq).upper()
+        
+        # Sanitize sequence to ensure proper frame
+        nucleotide_seq, start_offset = sanitize_sequence(nucleotide_seq_raw)
+        
+        # Create simple 1-based coordinate map (adjusted for sanitization offset)
+        coordinate_map = [(seq_rec.id, i + 1 + start_offset) for i in range(len(nucleotide_seq))]
+        
+        return nucleotide_seq, coordinate_map, start_offset
+
+    # MODE 1: GTF mode (extract CDS from genomic coordinates)
+    if not os.path.exists(gtf_path):
+        raise FileNotFoundError(f"GTF file not found: {gtf_path}")
+
+    # Parse GTF and collect CDS features
+    cds_features = []
+    with open(gtf_path, "r") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            parts = line.split("\t")
+            if len(parts) < 9:
+                continue
+            seqname, source, feature, start, end, score, strand, frame, attrs = parts[:9]
+            if feature != "CDS":
+                continue
+            attrd = _parse_gtf_attributes(attrs)
+            cds_features.append({
+                "seqname": seqname,
+                "start": int(start),
+                "end": int(end),
+                "strand": strand,
+                "attributes": attrd,
+            })
+
+    if not cds_features:
+        raise ValueError(f"No CDS features found in GTF: {gtf_path}")
+
+    # Group by transcript_id
+    transcripts = {}
+    for f in cds_features:
+        tid = f["attributes"].get("transcript_id") or f["attributes"].get("transcript") or ""
+        gid = f["attributes"].get("gene_id") or f["attributes"].get("gene") or ""
+        if gene_id and gid and gid != gene_id:
+            continue
+        transcripts.setdefault(tid, {"records": [], "gene_id": gid, "seqname": f["seqname"], "strand": f["strand"]})
+        transcripts[tid]["records"].append((f["start"], f["end"]))
+
+    if transcript_id:
+        if transcript_id not in transcripts:
+            raise ValueError(f"transcript_id '{transcript_id}' not found in GTF (after filtering by gene_id if provided).")
+        chosen_tid = transcript_id
+    else:
+        # Choose the transcript with the longest total CDS length
+        best = None
+        best_len = -1
+        for tid, v in transcripts.items():
+            total = sum(e - s + 1 for s, e in v["records"])
+            if total > best_len:
+                best = tid
+                best_len = total
+        if best is None:
+            raise ValueError("No transcript found after filtering GTF (maybe gene_id filter removed all transcripts).")
+        chosen_tid = best
+
+    chosen = transcripts[chosen_tid]
+    seqname = chosen["seqname"]
+    strand = chosen["strand"]
+    seq_rec = _find_seq_record(seqname, seq_records)
+    if seq_rec is None:
+        raise ValueError(f"Sequence '{seqname}' referenced in GTF not found in FASTA.")
+
+    # Normalize and sort intervals in transcript order
+    intervals = chosen["records"]
+    if strand == "+":
+        intervals = sorted(intervals, key=lambda x: x[0])
+    else:
+        intervals = sorted(intervals, key=lambda x: x[0], reverse=True)
+
+    seq_parts: List[str] = []
+    coordinate_map: List[Tuple[str, int]] = []
+
+    for s, e in intervals:
+        if s < 1 or e > len(seq_rec.seq):
+            # allow but warn — here we raise to keep behavior strict
+            raise ValueError(f"CDS coordinates {s}-{e} are out of bounds for sequence '{seqname}' (length {len(seq_rec.seq)}).")
+        seg = seq_rec.seq[s - 1 : e]
+        if strand == "+":
+            seq_parts.append(str(seg))
+            coordinate_map.extend([(seqname, pos) for pos in range(s, e + 1)])
+        else:
+            # for negative strand, take reverse-complement of the exon and map coordinates from end->start
+            seq_parts.append(str(seg.reverse_complement()))
+            coordinate_map.extend([(seqname, pos) for pos in range(e, s - 1, -1)])
+
+    nucleotide_seq_raw = "".join(seq_parts)
+
+    if len(nucleotide_seq_raw) != len(coordinate_map):
+        raise RuntimeError("Internal error: nucleotide sequence length disagrees with coordinate map length.")
+
+    # Sanitize the concatenated CDS to ensure proper frame
     nucleotide_seq, start_offset = sanitize_sequence(nucleotide_seq_raw)
     
-    # Calculate final genomic start position
-    # If we removed N nucleotides from start, the genomic start shifts by N
-    # Coordinate system: 1-based inclusive
-    final_genomic_start = raw_start + start_offset
+    # Adjust coordinate map if start offset was applied
+    if start_offset > 0:
+        coordinate_map = coordinate_map[start_offset:]
     
-    # Generate coordinate map for the sanitized sequence
-    # This maps each residue index to (chrom, genomic_pos)
-    coordinate_map = []
-    for i in range(len(nucleotide_seq)):
-        # Assuming + strand for simplicity as per requirements (or if header implies it)
-        # If headers imply specific strands, we'd need that info. 
-        # For now, we assume simple forward mapping.
-        current_pos = final_genomic_start + i
-        coordinate_map.append((chrom, current_pos))
-        
-    return nucleotide_seq, coordinate_map, start_offset, chrom, final_genomic_start
+    # Truncate coordinate map if end was trimmed
+    if len(nucleotide_seq) < len(coordinate_map):
+        coordinate_map = coordinate_map[:len(nucleotide_seq)]
+
+    return nucleotide_seq, coordinate_map, start_offset
 
 
 def parse_pdb_structure(pdb_file: str, chain_id: Optional[str] = None) -> Tuple[str, List]:
@@ -313,27 +388,16 @@ def parse_ribo_density(density_file: str, chrom: str, start: int, end: int) -> n
                 continue
             
             parts = line.split('\t')
+            if len(parts) < 4:
+                continue
             
-            # Handle standard BedGraph (4 cols) or implied-chrom BedGraph (3 cols)
-            if len(parts) >= 4:
-                bed_chrom = parts[0]
-                bed_start = int(parts[1])  # 0-based
-                bed_end = int(parts[2])    # 0-based, exclusive
-                score = float(parts[3])
-                
-                # Skip if different chromosome
-                if bed_chrom != chrom:
-                    continue
-                    
-            elif len(parts) == 3:
-                # Assume implicit chromosome (3 cols: start, end, score)
-                # This is a heuristic for when BedGraph is already filtered for the gene
-                bed_chrom = chrom  # Implicitly match requested chrom
-                bed_start = int(parts[0])
-                bed_end = int(parts[1])
-                score = float(parts[2])
-                
-            else:
+            bed_chrom = parts[0]
+            bed_start = int(parts[1])  # 0-based
+            bed_end = int(parts[2])    # 0-based, exclusive
+            score = float(parts[3])
+            
+            # Skip if different chromosome
+            if bed_chrom != chrom:
                 continue
             
             # Convert bedGraph 0-based to 1-based coordinates

@@ -261,17 +261,7 @@
                     <p class="help-text">CDS or genomic sequence in FASTA format</p>
                 </div>
 
-                <div class="form-group">
-                    <label>GTF Annotation File (Optional)</label>
-                    <div class="file-input-wrapper">
-                        <input type="file" id="gtf_file" accept=".gtf,.gff">
-                        <label for="gtf_file" class="file-label" id="gtf_label">
-                            <span class="file-icon">📋</span>
-                            <span class="file-text">Choose GTF file (optional)...</span>
-                        </label>
-                    </div>
-                    <p class="help-text">Gene annotation (only needed if FASTA is genomic with introns)</p>
-                </div>
+
 
                 <div class="form-group">
                     <label>BedGraph Density File</label>
@@ -308,7 +298,7 @@
 
     <script>
         // Update file labels when files are selected
-        const fileInputs = ['pdb_file', 'fasta_file', 'gtf_file', 'density_file'];
+        const fileInputs = ['pdb_file', 'fasta_file', 'density_file'];
 
         fileInputs.forEach(inputId => {
             const input = document.getElementById(inputId);
@@ -341,12 +331,7 @@
             const formData = new FormData();
             formData.append('pdb_file', document.getElementById('pdb_file').files[0]);
             formData.append('fasta_file', document.getElementById('fasta_file').files[0]);
-
-            // GTF is optional - only include if selected
-            const gtfFile = document.getElementById('gtf_file').files[0];
-            if (gtfFile) {
-                formData.append('gtf_file', gtfFile);
-            }
+            formData.append('density_file', document.getElementById('density_file').files[0]);
 
             formData.append('density_file', document.getElementById('density_file').files[0]);
             formData.append('offsets', document.getElementById('offsets').value);

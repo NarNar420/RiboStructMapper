@@ -29,11 +29,8 @@ from ribostruct.core.injector import inject_bfactors
 def run_pipeline(
     pdb_path: str,
     fasta_path: str,
-    gtf_path: str = None,
     bedgraph_path: str = None,
     offsets: List[int] = None,
-    gene_id: str = None,
-    transcript_id: str = None,
     chain_id: str = None,
     aggregation_method: str = 'mean',
     output_dir: str = '.'
@@ -41,53 +38,35 @@ def run_pipeline(
     """
     Run the complete RiboStructMapper pipeline.
     
-    This function orchestrates all modules to process genomic data, ribosome
-    density, and PDB structure files, generating modified PDB files with
-    density scores injected into B-factor fields.
-    
     Args:
         pdb_path: Path to input PDB file
-        fasta_path: Path to FASTA file (genomic or CDS sequence)
-        gtf_path: Optional path to GTF/GFF annotation file (required if FASTA is genomic)
+        fasta_path: Path to FASTA file (header format: >ID Chrom:Start..End)
         bedgraph_path: Path to bedGraph density file
         offsets: List of offset values (in nucleotides) to apply
-        gene_id: Optional gene ID to filter (GTF mode) or sequence ID to select (FASTA-only mode)
-        transcript_id: Optional transcript ID to filter (GTF mode only)
         chain_id: Optional PDB chain ID (default: first chain)
         aggregation_method: Density aggregation method ('mean', 'max', 'sum', 'median')
         output_dir: Directory to save output files (default: current directory)
     
     Returns:
         Dictionary mapping offset values to output file paths
-    
-    Pipeline Steps:
-        1. Parse genomic data (FASTA + optional GTF) → nucleotide sequence
-        2. Parse ribosome density (bedGraph) → raw density vector
-        3. Parse PDB structure → amino acid sequence + structure object
-        4. Translate genomic sequence → genomic amino acids
-        5. Align genomic AA with PDB AA → residue mapping
-        6. Process offsets: shift NT density + aggregate to AA level
-        7. Inject B-factors for each offset → output PDB files
     """
     print("=" * 70)
     print("RIBOSTRUCTMAPPER - END-TO-END PIPELINE")
     print("=" * 70)
     
     # ========================================================================
-    # STEP 1: Parse Genomic Data (FASTA + optional GTF)
+    # STEP 1: Parse Genomic Data (FASTA Header for Coordinates)
     # ========================================================================
     print("\n[STEP 1] Parsing genomic data...")
     print(f"  FASTA: {fasta_path}")
-    if gtf_path:
-        print(f"  GTF:   {gtf_path}")
-    else:
-        print(f"  GTF:   (none - FASTA assumed to be CDS)")
     
-    nucleotide_seq, coord_map, start_offset = parse_genomic_data(
-        fasta_path, gtf_path, gene_id=gene_id, transcript_id=transcript_id
+    nucleotide_seq, coord_map, start_offset, chrom, genomic_start = parse_genomic_data(
+        fasta_path
     )
     
     print(f"  ✓ Extracted CDS: {len(nucleotide_seq)} nucleotides")
+    print(f"    Chromosome: {chrom}")
+    print(f"    Genomic Start: {genomic_start} (1-based, inclusive)")
     if start_offset > 0:
         print(f"    ⚠ Sanitized: Removed {start_offset} nucleotides from start")
     print(f"    Sequence: {nucleotide_seq[:60]}...")
@@ -98,39 +77,20 @@ def run_pipeline(
     print("\n[STEP 2] Parsing ribosome density...")
     print(f"  bedGraph: {bedgraph_path}")
     
-    # Get chromosome and coordinates from coordinate map
-    chrom = coord_map[0][0]
-    start = min(pos for _, pos in coord_map)
-    end = max(pos for _, pos in coord_map)
+    # Calculate end coordinate based on sequence length
+    # start is 1-based inclusive, so end = start + length - 1
+    # Example: Start 100, Len 3 -> 100, 101, 102 (End 102) -> 100 + 3 - 1 = 102
+    end = genomic_start + len(nucleotide_seq) - 1
     
-    raw_density = parse_ribo_density(bedgraph_path, chrom, start, end)
+    raw_density = parse_ribo_density(bedgraph_path, chrom, genomic_start, end)
     
     print(f"  ✓ Loaded raw density: {len(raw_density)} values")
-    print(f"    Chromosome: {chrom}, Region: {start}-{end}")
+    print(f"    Chromosome: {chrom}, Region: {genomic_start}-{end}")
     print(f"    Density range: [{raw_density.min():.1f}, {raw_density.max():.1f}]")
     
-    # Synchronize density with sanitized sequence
-    # Apply same sanitization offset to density vector
-    if start_offset > 0:
-        aligned_density = raw_density[start_offset:]
-        print(f"    ⚠ Aligned density: Shifted by {start_offset} to match sanitized sequence")
-    else:
-        aligned_density = raw_density
-    
-    # Ensure density vector matches sequence length
-    target_len = len(nucleotide_seq)
-    current_len = len(aligned_density)
-    
-    if current_len > target_len:
-        # Density too long - truncate
-        aligned_density = aligned_density[:target_len]
-        print(f"    ⚠ Truncated density: {current_len} → {target_len} (removed {current_len - target_len} from end)")
-    elif current_len < target_len:
-        # Density too short - pad with zeros
-        import numpy as np
-        padding = np.zeros(target_len - current_len)
-        aligned_density = np.concatenate([aligned_density, padding])
-        print(f"    ⚠ Padded density: {current_len} → {target_len} (added {target_len - current_len} zeros)")
+    # Density vector is already aligned to the sanitized sequence because
+    # we fetched it using the *final* genomic start and length.
+    aligned_density = raw_density
     
     # Safety check
     assert len(aligned_density) == len(nucleotide_seq), \
@@ -269,17 +229,10 @@ def main():
     # Define paths to mock data
     pdb_path = "data/mock/mock.pdb"
     fasta_path = "data/mock/mock.fasta"
-    gtf_path = "data/mock/mock.gtf"
-    bedgraph_path = "data/mock/mock.bedgraph"
-    
-    # Define offsets to test
-    offsets = [0, -10]
-    
     # Run the pipeline
     output_files = run_pipeline(
         pdb_path=pdb_path,
         fasta_path=fasta_path,
-        gtf_path=gtf_path,
         bedgraph_path=bedgraph_path,
         offsets=offsets,
         aggregation_method='mean',
