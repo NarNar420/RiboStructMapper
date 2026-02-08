@@ -11,7 +11,8 @@ import shutil
 from pathlib import Path
 
 # Import the cleanup function from server
-from server import cleanup_old_jobs, JOBS_DIR
+from ribostruct.web.server import cleanup_old_jobs, JOBS_DIR
+
 
 
 def test_cleanup_old_jobs():

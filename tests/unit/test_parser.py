@@ -6,7 +6,8 @@ Tests the parse_genomic_data function with mock FASTA and GTF files.
 
 import os
 import sys
-from parser import parse_genomic_data
+from ribostruct.core.parser import parse_genomic_data
+
 
 def test_parse_genomic_data_basic():
     """Test basic parsing of genomic data with mock files."""
@@ -14,8 +15,8 @@ def test_parse_genomic_data_basic():
     print("Test 1: Basic parse_genomic_data with mock files")
     print("=" * 60)
     
-    fasta_path = "mock_data/mock.fasta"
-    gtf_path = "mock_data/mock.gtf"
+    fasta_path = "data/mock/mock.fasta"
+    gtf_path = "data/mock/mock.gtf"
     
     try:
         nucleotide_seq, coord_map = parse_genomic_data(fasta_path, gtf_path)
@@ -58,8 +59,8 @@ def test_parse_genomic_data_with_gene_id():
     print("Test 2: parse_genomic_data with gene_id filter")
     print("=" * 60)
     
-    fasta_path = "mock_data/mock.fasta"
-    gtf_path = "mock_data/mock.gtf"
+    fasta_path = "data/mock/mock.fasta"
+    gtf_path = "data/mock/mock.gtf"
     
     try:
         nucleotide_seq, coord_map = parse_genomic_data(
@@ -87,8 +88,8 @@ def test_parse_genomic_data_with_transcript_id():
     print("Test 3: parse_genomic_data with transcript_id filter")
     print("=" * 60)
     
-    fasta_path = "mock_data/mock.fasta"
-    gtf_path = "mock_data/mock.gtf"
+    fasta_path = "data/mock/mock.fasta"
+    gtf_path = "data/mock/mock.gtf"
     
     try:
         nucleotide_seq, coord_map = parse_genomic_data(
@@ -119,7 +120,7 @@ def test_missing_fasta_file():
     try:
         nucleotide_seq, coord_map = parse_genomic_data(
             "nonexistent.fasta", 
-            "mock_data/mock.gtf"
+            "data/mock/mock.gtf"
         )
         print(f"✗ Should have raised FileNotFoundError")
         return False
@@ -141,7 +142,7 @@ def test_missing_gtf_file():
     
     try:
         nucleotide_seq, coord_map = parse_genomic_data(
-            "mock_data/mock.fasta",
+            "data/mock/mock.fasta",
             "nonexistent.gtf"
         )
         print(f"✗ Should have raised FileNotFoundError")

@@ -1,2 +1,0 @@
--12: jobs/e7a7f5c8-d053-4fd5-9fdc-ef87c3f6e560/output_offset_-12.pdb
-0: jobs/e7a7f5c8-d053-4fd5-9fdc-ef87c3f6e560/output_offset_0.pdb

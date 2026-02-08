@@ -19,10 +19,11 @@ from typing import List, Dict
 from Bio.PDB import PDBParser
 
 # Import all modules
-from parser import parse_genomic_data, parse_pdb_structure, parse_ribo_density
-from alignment import translate_sequence, align_sequences
-from processor import process_offsets
-from injector import inject_bfactors
+from ribostruct.core.parser import parse_genomic_data, parse_pdb_structure, parse_ribo_density
+from ribostruct.core.alignment import translate_sequence, align_sequences
+from ribostruct.core.processor import process_offsets
+from ribostruct.core.injector import inject_bfactors
+
 
 
 def run_pipeline(
@@ -231,10 +232,10 @@ def main():
     print("\nRiboStructMapper CLI - Running with mock data\n")
     
     # Define paths to mock data
-    pdb_path = "mock_data/mock.pdb"
-    fasta_path = "mock_data/mock.fasta"
-    gtf_path = "mock_data/mock.gtf"
-    bedgraph_path = "mock_data/mock.bedgraph"
+    pdb_path = "data/mock/mock.pdb"
+    fasta_path = "data/mock/mock.fasta"
+    gtf_path = "data/mock/mock.gtf"
+    bedgraph_path = "data/mock/mock.bedgraph"
     
     # Define offsets to test
     offsets = [0, -10]

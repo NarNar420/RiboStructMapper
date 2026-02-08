@@ -7,7 +7,8 @@ Tests nucleotide-level offset application and aggregation to amino acids.
 
 import numpy as np
 import pytest
-from processor import shift_nucleotide_density, aggregate_density, process_offsets
+from ribostruct.core.processor import shift_nucleotide_density, aggregate_density, process_offsets
+
 
 
 def test_shift_nucleotide_density_no_offset():

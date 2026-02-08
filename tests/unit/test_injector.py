@@ -13,8 +13,8 @@ import os
 import sys
 import tempfile
 from Bio.PDB import PDBParser
-from parser import parse_pdb_structure
-from injector import inject_bfactors
+from ribostruct.core.parser import parse_pdb_structure
+from ribostruct.core.injector import inject_bfactors
 
 
 def test_basic_injection():
@@ -23,7 +23,7 @@ def test_basic_injection():
     print("Test 1: Basic B-factor injection")
     print("=" * 60)
     
-    pdb_path = "mock_data/mock.pdb"
+    pdb_path = "data/mock/mock.pdb"
     
     try:
         # Parse the structure
@@ -125,7 +125,7 @@ def test_all_residues_mapped():
     print("Test 2: All residues mapped")
     print("=" * 60)
     
-    pdb_path = "mock_data/mock.pdb"
+    pdb_path = "data/mock/mock.pdb"
     
     try:
         # Parse the structure
@@ -194,7 +194,7 @@ def test_no_residues_mapped():
     print("Test 3: No residues mapped")
     print("=" * 60)
     
-    pdb_path = "mock_data/mock.pdb"
+    pdb_path = "data/mock/mock.pdb"
     
     try:
         # Parse the structure
@@ -260,7 +260,7 @@ def test_custom_unmapped_value():
     print("Test 4: Custom unmapped value")
     print("=" * 60)
     
-    pdb_path = "mock_data/mock.pdb"
+    pdb_path = "data/mock/mock.pdb"
     
     try:
         # Parse the structure

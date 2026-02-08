@@ -1,5 +1,40 @@
-venv/
+# Python
 __pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Output files
+output_offset_*.pdb
+*.zip
+
+# Jobs directory (runtime data)
 jobs/
+
+# Test cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Old structure (to ignore during transition)
 mock_data/
-*.pdb

@@ -21,7 +21,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 # Import the pipeline function
-from main_cli import run_pipeline
+from ribostruct.cli.main import run_pipeline
 
 
 # Initialize FastAPI application
@@ -35,7 +35,7 @@ app = FastAPI(
 JOBS_DIR = Path("jobs")
 JOBS_DIR.mkdir(exist_ok=True)
 
-STATIC_DIR = Path("static")
+STATIC_DIR = Path(__file__).parent / "static"
 STATIC_DIR.mkdir(exist_ok=True)
 
 
@@ -468,7 +468,7 @@ async def download_results(job_id: str):
 # ============================================================================
 
 # Mount static files (HTML frontend)
-app.mount("/", StaticFiles(directory="static", html=True), name="static")
+app.mount("/", StaticFiles(directory=str(STATIC_DIR), html=True), name="static")
 
 
 # ============================================================================

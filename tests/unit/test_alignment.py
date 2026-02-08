@@ -9,7 +9,8 @@ This script verifies that:
 
 from Bio import SeqIO
 from Bio.PDB import PDBParser
-from alignment import translate_sequence, align_sequences
+from ribostruct.core.alignment import translate_sequence, align_sequences
+
 
 
 def extract_pdb_sequence(pdb_path: str, chain_id: str = 'A') -> str:
@@ -55,7 +56,7 @@ def main():
     
     # 1. Load and translate the genomic sequence
     print("\n[1] Loading mock genomic sequence...")
-    fasta_path = "mock_data/mock.fasta"
+    fasta_path = "data/mock/mock.fasta"
     
     fasta_records = list(SeqIO.parse(fasta_path, "fasta"))
     nucleotide_seq = str(fasta_records[0].seq)
@@ -69,7 +70,7 @@ def main():
     
     # 2. Extract PDB sequence
     print(f"\n[3] Extracting sequence from PDB...")
-    pdb_path = "mock_data/mock.pdb"
+    pdb_path = "data/mock/mock.pdb"
     pdb_aa_original = extract_pdb_sequence(pdb_path)
     print(f"    Original PDB AA sequence: {pdb_aa_original}")
     print(f"    Length: {len(pdb_aa_original)} residues")

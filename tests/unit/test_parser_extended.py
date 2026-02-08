@@ -9,7 +9,8 @@ functions added to parser.py.
 import os
 import sys
 import numpy as np
-from parser import parse_pdb_structure, parse_ribo_density
+from ribostruct.core.parser import parse_pdb_structure, parse_ribo_density
+
 
 
 def test_parse_pdb_structure_basic():
@@ -18,7 +19,7 @@ def test_parse_pdb_structure_basic():
     print("Test 1: Basic parse_pdb_structure (no chain filter)")
     print("=" * 60)
     
-    pdb_path = "mock_data/mock.pdb"
+    pdb_path = "data/mock/mock.pdb"
     
     try:
         sequence, residues = parse_pdb_structure(pdb_path)
@@ -60,7 +61,7 @@ def test_parse_pdb_structure_with_chain():
     print("Test 2: parse_pdb_structure with chain_id='A'")
     print("=" * 60)
     
-    pdb_path = "mock_data/mock.pdb"
+    pdb_path = "data/mock/mock.pdb"
     
     try:
         sequence, residues = parse_pdb_structure(pdb_path, chain_id='A')
@@ -94,7 +95,7 @@ def test_parse_pdb_structure_invalid_chain():
     print("Test 3: Error handling - invalid chain ID")
     print("=" * 60)
     
-    pdb_path = "mock_data/mock.pdb"
+    pdb_path = "data/mock/mock.pdb"
     
     try:
         sequence, residues = parse_pdb_structure(pdb_path, chain_id='Z')
@@ -136,7 +137,7 @@ def test_parse_ribo_density_basic():
     print("Test 5: Basic parse_ribo_density")
     print("=" * 60)
     
-    bedgraph_path = "mock_data/mock.bedgraph"
+    bedgraph_path = "data/mock/mock.bedgraph"
     
     try:
         # Parse density for the full CDS region (1-45)
@@ -189,7 +190,7 @@ def test_parse_ribo_density_partial_overlap():
     print("Test 6: parse_ribo_density with partial overlap")
     print("=" * 60)
     
-    bedgraph_path = "mock_data/mock.bedgraph"
+    bedgraph_path = "data/mock/mock.bedgraph"
     
     try:
         # Request positions 20-35 (spans two bedGraph regions)
@@ -228,7 +229,7 @@ def test_parse_ribo_density_no_overlap():
     print("Test 7: parse_ribo_density with no overlap")
     print("=" * 60)
     
-    bedgraph_path = "mock_data/mock.bedgraph"
+    bedgraph_path = "data/mock/mock.bedgraph"
     
     try:
         # Request positions way outside the bedGraph data (1000-1010)
@@ -279,7 +280,7 @@ def test_parse_ribo_density_invalid_coords():
     print("Test 9: Error handling - invalid coordinates")
     print("=" * 60)
     
-    bedgraph_path = "mock_data/mock.bedgraph"
+    bedgraph_path = "data/mock/mock.bedgraph"
     
     try:
         # start > end
