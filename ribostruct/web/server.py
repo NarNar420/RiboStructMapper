@@ -448,6 +448,60 @@ async def download_results(job_id: str):
     )
 
 
+@app.get("/jobs/{job_id}/files")
+async def list_job_files(job_id: str):
+    """
+    List all available output PDB files for a completed job.
+    
+    Args:
+        job_id: The unique job identifier
+        
+    Returns:
+        JSON list of filenames
+    """
+    job_dir = JOBS_DIR / job_id
+    
+    if not job_dir.exists():
+        raise HTTPException(status_code=404, detail=f"Job {job_id} not found")
+        
+    status_file = job_dir / "status.txt"
+    if not status_file.exists() or status_file.read_text().strip() != "completed":
+        raise HTTPException(status_code=400, detail="Job not completed yet")
+        
+    output_files = [f.name for f in job_dir.glob("output_offset_*.pdb")]
+    
+    if not output_files:
+        raise HTTPException(status_code=404, detail="No output files found")
+        
+    return {"files": sorted(output_files)}
+
+
+@app.get("/jobs/{job_id}/files/{filename}")
+async def get_job_file(job_id: str, filename: str):
+    """
+    Serve a specific output PDB file for visualization.
+    
+    Args:
+        job_id: The unique job identifier
+        filename: The requested output file name
+    """
+    job_dir = JOBS_DIR / job_id
+    
+    if not job_dir.exists():
+        raise HTTPException(status_code=404, detail=f"Job {job_id} not found")
+        
+    file_path = job_dir / filename
+    
+    if not file_path.exists() or not file_path.name.startswith("output_offset_"):
+        raise HTTPException(status_code=404, detail="File not found or invalid")
+        
+    return FileResponse(
+        path=str(file_path),
+        media_type="text/plain",
+        filename=filename
+    )
+
+
 # ============================================================================
 # Static Files - Must be last
 # ============================================================================
