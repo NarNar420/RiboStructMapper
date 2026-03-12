@@ -4,12 +4,6 @@ FROM python:3.10-slim
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies (if needed for biopython/numpy)
-RUN apt-get update && apt-get install -y \
-    gcc \
-    g++ \
-    && rm -rf /var/lib/apt/lists/*
-
 # Copy requirements first for better caching
 COPY requirements.txt .
 
@@ -28,7 +22,7 @@ EXPOSE 8000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8000/health')" || exit 1
+    CMD python -c "import os, requests; port = os.environ.get('PORT', '8000'); requests.get(f'http://localhost:{port}/health')" || exit 1
 
-# Run the application
-CMD ["uvicorn", "ribostruct.web.server:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run the application (Render dynamically assigns $PORT)
+CMD sh -c "uvicorn ribostruct.web.server:app --host 0.0.0.0 --port ${PORT:-8000}"
