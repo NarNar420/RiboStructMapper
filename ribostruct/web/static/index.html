@@ -225,6 +225,75 @@
             color: #71717a;
             font-size: 0.9rem;
         }
+
+        /* Tooltip Container */
+        .tooltip {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 8px;
+            width: 18px;
+            height: 18px;
+            background: rgba(102, 126, 234, 0.2);
+            border: 1px solid rgba(102, 126, 234, 0.5);
+            border-radius: 50%;
+            color: #a1a1aa;
+            font-size: 0.75rem;
+            font-weight: bold;
+            cursor: help;
+        }
+
+        /* Tooltip Text (Hidden by default) */
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: 250px;
+            background-color: #27272a;
+            color: #e4e4e7;
+            text-align: center;
+            border-radius: 6px;
+            padding: 10px 14px;
+            font-size: 0.85rem;
+            font-weight: normal;
+            position: absolute;
+            z-index: 10;
+            bottom: 150%;
+            left: 50%;
+            margin-left: -125px;
+            opacity: 0;
+            transition: opacity 0.3s, visibility 0.3s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Tooltip Arrow */
+        .tooltip .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #27272a transparent transparent transparent;
+        }
+
+        /* Show on Hover */
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .tooltip:hover {
+            background: rgba(102, 126, 234, 0.4);
+            color: #fff;
+        }
+
+        /* Adjust label for flex alignment */
+        .form-group > label {
+            display: flex;
+            align-items: center;
+        }
     </style>
 </head>
 
@@ -238,7 +307,12 @@
         <div class="card">
             <form id="upload-form">
                 <div class="form-group">
-                    <label>PDB Structure File</label>
+                    <label>
+                        PDB Structure File
+                        <div class="tooltip">i
+                            <span class="tooltip-text">Standard Protein Data Bank format containing ATOM records. The B-factor column will be overwritten with density scores.</span>
+                        </div>
+                    </label>
                     <div class="file-input-wrapper">
                         <input type="file" id="pdb_file" accept=".pdb" required>
                         <label for="pdb_file" class="file-label" id="pdb_label">
@@ -250,7 +324,12 @@
                 </div>
 
                 <div class="form-group">
-                    <label>FASTA Sequence File</label>
+                    <label>
+                        FASTA Sequence File
+                        <div class="tooltip">i
+                            <span class="tooltip-text">Genomic sequence for the specified gene. Must be a valid FASTA format starting with a > header.</span>
+                        </div>
+                    </label>
                     <div class="file-input-wrapper">
                         <input type="file" id="fasta_file" accept=".fasta,.fa" required>
                         <label for="fasta_file" class="file-label" id="fasta_label">
@@ -264,7 +343,12 @@
 
 
                 <div class="form-group">
-                    <label>BedGraph Density File</label>
+                    <label>
+                        BedGraph Density File
+                        <div class="tooltip">i
+                            <span class="tooltip-text">Tab-separated values: chrom, start, end, density. Coordinates must be 0-based intervals matching the FASTA.</span>
+                        </div>
+                    </label>
                     <div class="file-input-wrapper">
                         <input type="file" id="density_file" accept=".bedgraph,.bedGraph" required>
                         <label for="density_file" class="file-label" id="density_label">
@@ -276,7 +360,12 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="offsets">Offset Values</label>
+                    <label for="offsets">
+                        Offset Values
+                        <div class="tooltip">i
+                            <span class="tooltip-text">Adjusts ribosome position upstream on the sequence. Values like -12 or -15 are common for mapping P-sites.</span>
+                        </div>
+                    </label>
                     <input type="text" id="offsets" placeholder="e.g., 0,-12,-15" value="0,-12" required>
                     <p class="help-text">Comma-separated nucleotide offset values for ribosome position</p>
                 </div>
