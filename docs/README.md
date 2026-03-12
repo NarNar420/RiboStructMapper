@@ -225,20 +225,13 @@ mock_chrom	test	CDS	1	45	.	+	0	gene_id "MOCK1"; transcript_id "MOCK1.1";
 ## 🧪 Testing
 
 ```bash
-# Run core module tests
-pytest test_parser.py
-pytest test_alignment.py
-pytest test_processor.py
-pytest test_injector.py
+# Run all tests using pytest
+pytest tests/
 
-# Test server endpoints
-python test_server.py
-
-# Test cleanup functionality
-python test_cleanup.py
-
-# Test complete workflow
-python test_complete_workflow.py
+# Run specific test suites
+pytest tests/unit/
+pytest tests/api/
+pytest tests/integration/
 ```
 
 ---

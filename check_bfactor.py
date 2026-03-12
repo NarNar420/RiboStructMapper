@@ -1,3 +1,10 @@
+"""
+B-factor Checking Utility.
+
+This script parses a PDB file and calculates statistics (Min, Max, Avg) 
+for the B-factor column of all atoms. It is primarily used for verification 
+to ensure density scores were successfully injected into a PDB structure.
+"""
 
 import sys
 from Bio.PDB import PDBParser

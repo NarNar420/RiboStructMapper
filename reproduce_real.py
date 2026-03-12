@@ -1,3 +1,10 @@
+"""
+Real Data Reproduction Script.
+
+This script runs the RiboStructMapper pipeline on actual biological data 
+(e.g., AF-P10664 PDB and RPL4A Sequence) to reproduce, debug, and verify 
+the pipeline logic against real-world coordinate structures and density files.
+"""
 
 import os
 import sys

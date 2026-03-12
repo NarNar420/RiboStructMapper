@@ -41,19 +41,19 @@ The server will start at `http://127.0.0.1:8000`
      - `uploaded` → `processing` → `completed` (or `failed`)
    - When completed, find output PDB files: `output_offset_0.pdb`, etc.
 
-## Testing with Mock Data
+## Testing the API
 
-To test with the provided mock data:
+To test the server programmatic endpoints:
 
 ```bash
 # Make sure server is running in one terminal
 uvicorn server:app --reload
 
-# In another terminal, run the test script
-python test_server_manual.py
+# In another terminal, run the API tests
+pytest tests/api/
 ```
 
-This will submit a job and monitor its progress automatically.
+This will run automated tests against the server endpoints.
 
 ## API Endpoints
 
