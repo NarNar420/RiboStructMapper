@@ -14,8 +14,8 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: #e4e4e7;
+            background-color: #ffffff;
+            color: #1f2937;
             min-height: 100vh;
             padding: 20px;
         }
@@ -34,24 +34,20 @@
         h1 {
             font-size: 2.5rem;
             margin-bottom: 10px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #118b44;
         }
 
         .subtitle {
-            color: #a1a1aa;
+            color: #4b5563;
             font-size: 1.1rem;
         }
 
         .card {
-            background: rgba(255, 255, 255, 0.05);
+            background: #f9fafb;
             border-radius: 16px;
             padding: 32px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
             margin-bottom: 20px;
         }
 
@@ -63,8 +59,13 @@
             display: block;
             margin-bottom: 8px;
             font-weight: 500;
-            color: #e4e4e7;
+            color: #1f2937;
             font-size: 0.95rem;
+        }
+
+        .form-group > label {
+            display: flex;
+            align-items: center;
         }
 
         .file-input-wrapper {
@@ -83,59 +84,54 @@
             display: flex;
             align-items: center;
             padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.08);
-            border: 2px dashed rgba(255, 255, 255, 0.2);
+            background: #ffffff;
+            border: 2px dashed #d1d5db;
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.3s ease;
         }
 
         .file-label:hover {
-            background: rgba(255, 255, 255, 0.12);
-            border-color: rgba(102, 126, 234, 0.5);
+            background: #f3f4f6;
+            border-color: rgba(17, 139, 68, 0.5);
         }
 
         .file-label.has-file {
             border-style: solid;
-            border-color: rgba(102, 126, 234, 0.8);
-            background: rgba(102, 126, 234, 0.1);
-        }
-
-        .file-icon {
-            margin-right: 12px;
-            font-size: 1.2rem;
+            border-color: #118b44;
+            background: rgba(17, 139, 68, 0.05);
         }
 
         .file-text {
             flex: 1;
-            color: #a1a1aa;
+            color: #6b7280;
         }
 
         .file-label.has-file .file-text {
-            color: #e4e4e7;
+            color: #1f2937;
         }
 
         input[type="text"] {
             width: 100%;
             padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.08);
-            border: 2px solid rgba(255, 255, 255, 0.2);
+            background: #ffffff;
+            border: 2px solid #d1d5db;
             border-radius: 8px;
-            color: #e4e4e7;
+            color: #1f2937;
             font-size: 1rem;
             transition: all 0.3s ease;
         }
 
         input[type="text"]:focus {
             outline: none;
-            border-color: rgba(102, 126, 234, 0.8);
-            background: rgba(255, 255, 255, 0.12);
+            border-color: #118b44;
+            background: #ffffff;
         }
 
         .button {
             width: 100%;
             padding: 14px 24px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #118b44;
             border: none;
             border-radius: 8px;
             color: white;
@@ -143,12 +139,13 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 4px 12px rgba(17, 139, 68, 0.2);
         }
 
         .button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+            background: #0e763a;
+            box-shadow: 0 6px 16px rgba(17, 139, 68, 0.3);
         }
 
         .button:active {
@@ -164,9 +161,13 @@
         #status-area {
             margin-top: 24px;
             padding: 20px;
-            background: rgba(255, 255, 255, 0.05);
+            background: #ffffff;
             border-radius: 8px;
-            border-left: 4px solid #667eea;
+            border-left: 4px solid #118b44;
+            border-top: 1px solid #e5e7eb;
+            border-right: 1px solid #e5e7eb;
+            border-bottom: 1px solid #e5e7eb;
+            color: #1f2937;
             display: none;
         }
 
@@ -183,9 +184,9 @@
             display: inline-block;
             width: 16px;
             height: 16px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
+            border: 3px solid rgba(17, 139, 68, 0.2);
             border-radius: 50%;
-            border-top-color: #667eea;
+            border-top-color: #118b44;
             animation: spin 1s linear infinite;
             margin-right: 8px;
         }
@@ -199,22 +200,23 @@
         .download-btn {
             display: inline-block;
             padding: 10px 20px;
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            background: #118b44;
             color: white;
             text-decoration: none;
             border-radius: 6px;
             font-weight: 600;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(56, 239, 125, 0.3);
+            box-shadow: 0 4px 12px rgba(17, 139, 68, 0.2);
         }
 
         .download-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(56, 239, 125, 0.5);
+            background: #0e763a;
+            box-shadow: 0 6px 16px rgba(17, 139, 68, 0.3);
         }
 
         .help-text {
-            color: #71717a;
+            color: #6b7280;
             font-size: 0.85rem;
             margin-top: 6px;
         }
@@ -222,7 +224,7 @@
         footer {
             text-align: center;
             margin-top: 40px;
-            color: #71717a;
+            color: #6b7280;
             font-size: 0.9rem;
         }
 
@@ -235,10 +237,10 @@
             margin-left: 8px;
             width: 18px;
             height: 18px;
-            background: rgba(102, 126, 234, 0.2);
-            border: 1px solid rgba(102, 126, 234, 0.5);
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
             border-radius: 50%;
-            color: #a1a1aa;
+            color: #4b5563;
             font-size: 0.75rem;
             font-weight: bold;
             cursor: help;
@@ -248,9 +250,9 @@
         .tooltip .tooltip-text {
             visibility: hidden;
             width: 250px;
-            background-color: #27272a;
-            color: #e4e4e7;
-            text-align: center;
+            background-color: #ffffff;
+            color: #1f2937;
+            text-align: left;
             border-radius: 6px;
             padding: 10px 14px;
             font-size: 0.85rem;
@@ -262,8 +264,8 @@
             margin-left: -125px;
             opacity: 0;
             transition: opacity 0.3s, visibility 0.3s;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
         }
 
         /* Tooltip Arrow */
@@ -275,7 +277,7 @@
             margin-left: -5px;
             border-width: 5px;
             border-style: solid;
-            border-color: #27272a transparent transparent transparent;
+            border-color: #ffffff transparent transparent transparent;
         }
 
         /* Show on Hover */
@@ -285,14 +287,9 @@
         }
 
         .tooltip:hover {
-            background: rgba(102, 126, 234, 0.4);
-            color: #fff;
-        }
-
-        /* Adjust label for flex alignment */
-        .form-group > label {
-            display: flex;
-            align-items: center;
+            background: #118b44;
+            color: #ffffff;
+            border-color: #118b44;
         }
     </style>
 </head>
@@ -300,7 +297,7 @@
 <body>
     <div class="container">
         <header>
-            <h1>🧬 RiboStructMapper</h1>
+            <h1>RiboStructMapper</h1>
             <p class="subtitle">Map ribosome density onto protein structures</p>
         </header>
 
@@ -316,7 +313,6 @@
                     <div class="file-input-wrapper">
                         <input type="file" id="pdb_file" accept=".pdb" required>
                         <label for="pdb_file" class="file-label" id="pdb_label">
-                            <span class="file-icon">📄</span>
                             <span class="file-text">Choose PDB file...</span>
                         </label>
                     </div>
@@ -333,14 +329,11 @@
                     <div class="file-input-wrapper">
                         <input type="file" id="fasta_file" accept=".fasta,.fa" required>
                         <label for="fasta_file" class="file-label" id="fasta_label">
-                            <span class="file-icon">🧬</span>
                             <span class="file-text">Choose FASTA file...</span>
                         </label>
                     </div>
                     <p class="help-text">CDS or genomic sequence in FASTA format</p>
                 </div>
-
-
 
                 <div class="form-group">
                     <label>
@@ -352,7 +345,6 @@
                     <div class="file-input-wrapper">
                         <input type="file" id="density_file" accept=".bedgraph,.bedGraph" required>
                         <label for="density_file" class="file-label" id="density_label">
-                            <span class="file-icon">📊</span>
                             <span class="file-text">Choose bedGraph file...</span>
                         </label>
                     </div>
@@ -371,7 +363,7 @@
                 </div>
 
                 <button type="submit" class="button" id="submit-btn">
-                    🚀 Process Files
+                    Process Files
                 </button>
             </form>
 
@@ -381,7 +373,7 @@
         </div>
 
         <footer>
-            <p>RiboStructMapper v1.0 | Powered by FastAPI & Biopython</p>
+            <p>RiboStructMapper v1.0 | Marx Structural Biology Group</p>
         </footer>
     </div>
 
@@ -427,7 +419,7 @@
 
             // Disable form and show status
             submitBtn.disabled = true;
-            submitBtn.textContent = '⏳ Uploading...';
+            submitBtn.textContent = 'Uploading...';
             statusArea.classList.add('visible');
             statusText.innerHTML = '<span class="spinner"></span>Uploading files...';
 
@@ -452,9 +444,9 @@
                 pollStatus(jobId); // Check immediately
 
             } catch (error) {
-                statusText.innerHTML = `❌ Error: ${error.message}`;
+                statusText.innerHTML = `Error: ${error.message}`;
                 submitBtn.disabled = false;
-                submitBtn.textContent = '🚀 Process Files';
+                submitBtn.textContent = 'Process Files';
             }
         });
 
@@ -472,20 +464,20 @@
                 if (status === 'completed') {
                     clearInterval(pollInterval);
                     statusText.innerHTML = `
-                        ✅ Processing complete!<br>
+                        Processing complete!<br>
                         <a href="/download/${jobId}" class="download-btn" style="margin-top: 12px; display: inline-block;">
-                            📥 Download Results
+                            Download Results
                         </a>
                     `;
                     submitBtn.disabled = false;
-                    submitBtn.textContent = '🚀 Process Files';
+                    submitBtn.textContent = 'Process Files';
 
                 } else if (status === 'failed') {
                     clearInterval(pollInterval);
                     const errorMsg = data.message || 'Unknown error';
-                    statusText.innerHTML = `❌ Processing failed: ${errorMsg}`;
+                    statusText.innerHTML = `Processing failed: ${errorMsg}`;
                     submitBtn.disabled = false;
-                    submitBtn.textContent = '🚀 Process Files';
+                    submitBtn.textContent = 'Process Files';
 
                 } else if (status === 'processing') {
                     statusText.innerHTML = `<span class="spinner"></span>Processing pipeline... (status: ${status})`;
@@ -496,9 +488,9 @@
 
             } catch (error) {
                 clearInterval(pollInterval);
-                statusText.innerHTML = `❌ Error checking status: ${error.message}`;
+                statusText.innerHTML = `Error checking status: ${error.message}`;
                 submitBtn.disabled = false;
-                submitBtn.textContent = '🚀 Process Files';
+                submitBtn.textContent = 'Process Files';
             }
         }
     </script>
