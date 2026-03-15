@@ -1,5 +1,5 @@
 """
-PDB Injector for RiboStructMapper.
+PDB Injector for RiboPrint.
 
 This module provides functionality to inject ribosome density scores into
 PDB B-factor fields for visualization in molecular viewers like PyMOL and Chimera.

@@ -1,5 +1,5 @@
 """
-RiboStructMapper - Data Processor Module
+RiboPrint - Data Processor Module
 
 This module handles ribosome density data processing, including:
 - Nucleotide-level offset application (ribosome position correction)

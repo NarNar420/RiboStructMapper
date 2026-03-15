@@ -1,7 +1,7 @@
 """
-RiboStructMapper FastAPI Server
+RiboPrint FastAPI Server
 
-This module provides the web API for the RiboStructMapper pipeline.
+This module provides the web API for the RiboPrint pipeline.
 It handles file uploads, job management, and serves processed results.
 """
 
@@ -26,7 +26,7 @@ from ribostruct.cli.main import run_pipeline
 
 # Initialize FastAPI application
 app = FastAPI(
-    title="RiboStructMapper API",
+    title="RiboPrint API",
     description="Web API for mapping ribosome density onto PDB structures",
     version="1.0.0"
 )
@@ -222,7 +222,7 @@ async def background_cleanup_task():
 @app.on_event("startup")
 async def startup_event():
     """Run when the server starts."""
-    print("[SERVER] Starting RiboStructMapper server...")
+    print("[SERVER] Starting RiboPrint server...")
     print(f"[SERVER] Jobs directory: {JOBS_DIR}")
     print(f"[SERVER] Static directory: {STATIC_DIR}")
     
@@ -235,7 +235,7 @@ async def startup_event():
 async def root():
     """Root endpoint - API information."""
     return {
-        "name": "RiboStructMapper API",
+        "name": "RiboPrint API",
         "version": "1.0.0",
         "status": "operational",
         "endpoints": {

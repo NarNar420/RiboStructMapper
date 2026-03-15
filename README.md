@@ -1,8 +1,8 @@
-# 🧬 RiboStructMapper
+# 🧬 RiboPrint
 
 **Map ribosome density data onto protein structures for visualization**
 
-RiboStructMapper is a bioinformatics pipeline that integrates ribosome profiling data with protein structures. It processes genomic sequences, ribosome density profiles, and PDB structures to generate visualization-ready output files with density scores encoded in the B-factor column.
+RiboPrint is a bioinformatics pipeline that integrates ribosome profiling data with protein structures. It processes genomic sequences, ribosome density profiles, and PDB structures to generate visualization-ready output files with density scores encoded in the B-factor column.
 
 [![Python](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.128-green.svg)](https://fastapi.tiangolo.com/)
@@ -45,7 +45,7 @@ uvicorn ribostruct.web.server:app --reload
 ## 🏗️ Project Structure
 
 ```
-RiboStructMapper/
+RiboPrint/
 ├── ribostruct/              # Main package
 │   ├── core/                # Core processing modules
 │   │   ├── parser.py        # Input parsing
@@ -137,7 +137,7 @@ output_files = run_pipeline(
 ```bash
 # Clone repository
 git clone <repository_url>
-cd RiboStructMapper
+cd RiboPrint
 
 # Create virtual environment
 python -m venv .venv

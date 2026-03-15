@@ -1,6 +1,6 @@
 # 🚀 Quick Start Guide - Web Interface
 
-## How to Use RiboStructMapper (5 Easy Steps)
+## How to Use RiboPrint (5 Easy Steps)
 
 ### 1. Start the Server
 ```bash

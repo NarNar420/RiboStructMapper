@@ -1,5 +1,5 @@
 """
-Web application for RiboStructMapper.
+Web application for RiboPrint.
 
 FastAPI-based web server with REST API and frontend interface.
 """

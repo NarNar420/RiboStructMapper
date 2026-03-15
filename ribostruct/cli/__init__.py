@@ -1,5 +1,5 @@
 """
-Command-line interface for RiboStructMapper.
+Command-line interface for RiboPrint.
 
 Provides CLI tools for running the processing pipeline from the command line.
 """

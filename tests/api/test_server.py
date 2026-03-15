@@ -40,7 +40,7 @@ def test_root_endpoint():
         data = response.json()
         
         assert "name" in data, "Response should contain 'name'"
-        assert "RiboStructMapper" in data["name"], "Name should contain 'RiboStructMapper'"
+        assert "RiboPrint" in data["name"], "Name should contain 'RiboPrint'"
         
         print(f"✓ Root endpoint working")
         print(f"  API Name: {data['name']}")

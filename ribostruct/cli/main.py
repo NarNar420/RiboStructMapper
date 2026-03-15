@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-RiboStructMapper CLI - End-to-End Pipeline Integration
+RiboPrint CLI - End-to-End Pipeline Integration
 
-This script demonstrates the complete RiboStructMapper pipeline by processing
+This script demonstrates the complete RiboPrint pipeline by processing
 genomic data, ribosome density, and PDB structure files to generate modified
 PDB files with density scores in the B-factor field.
 
@@ -36,7 +36,7 @@ def run_pipeline(
     output_dir: str = '.'
 ) -> Dict[int, str]:
     """
-    Run the complete RiboStructMapper pipeline.
+    Run the complete RiboPrint pipeline.
     
     Args:
         pdb_path: Path to input PDB file
@@ -50,9 +50,9 @@ def run_pipeline(
     Returns:
         Dictionary mapping offset values to output file paths
     """
-    print("=" * 70)
-    print("RIBOSTRUCTMAPPER - END-TO-END PIPELINE")
-    print("=" * 70)
+    print("=" * 50)
+    print("RIBOPRINT - END-TO-END PIPELINE")
+    print("=" * 50)
     
     # ========================================================================
     # STEP 1: Parse Genomic Data (FASTA Header for Coordinates)
@@ -224,7 +224,7 @@ def verify_output(output_path: str) -> None:
 
 def main():
     """Main execution function."""
-    print("\nRiboStructMapper CLI - Running with mock data\n")
+    print("\nRiboPrint CLI - Running with mock data\n")
     
     # Define paths to mock data
     pdb_path = "data/mock/mock.pdb"

@@ -1,8 +1,8 @@
 # 🌐 Production Deployment Guide
 
-## Making RiboStructMapper Publicly Accessible
+## Making RiboPrint Publicly Accessible
 
-This guide shows how to deploy RiboStructMapper so everyone can access it 24/7 without you manually starting the server.
+This guide shows how to deploy RiboPrint so everyone can access it 24/7 without you manually starting the server.
 
 ---
 
@@ -85,7 +85,7 @@ sudo apt install docker-compose -y
 ```bash
 # Clone your repository
 git clone <your-repo-url>
-cd RiboStructMapper
+cd RiboPrint
 
 # Start with Docker Compose
 sudo docker-compose up -d
@@ -173,15 +173,15 @@ sudo nano /etc/systemd/system/ribostruct.service
 **Add configuration:**
 ```ini
 [Unit]
-Description=RiboStructMapper Web Application
+Description=RiboPrint Web Application
 After=network.target
 
 [Service]
 Type=simple
 User=your-username
-WorkingDirectory=/home/your-username/RiboStructMapper
-Environment="PATH=/home/your-username/RiboStructMapper/.venv/bin"
-ExecStart=/home/your-username/RiboStructMapper/.venv/bin/uvicorn ribostruct.web.server:app --host 0.0.0.0 --port 8000
+WorkingDirectory=/home/your-username/RiboPrint
+Environment="PATH=/home/your-username/RiboPrint/.venv/bin"
+ExecStart=/home/your-username/RiboPrint/.venv/bin/uvicorn ribostruct.web.server:app --host 0.0.0.0 --port 8000
 Restart=always
 RestartSec=10
 
@@ -287,7 +287,7 @@ Monitor: `https://your-domain.com/health`
 ```bash
 # One-time setup
 git clone <repo>
-cd RiboStructMapper
+cd RiboPrint
 sudo docker-compose up -d
 sudo docker update --restart=always $(sudo docker ps -q)
 

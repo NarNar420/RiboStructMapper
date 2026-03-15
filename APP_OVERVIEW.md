@@ -1,8 +1,8 @@
-# RiboStructMapper Overview
+# RiboPrint Overview
 
-## What is RiboStructMapper?
+## What is RiboPrint?
 
-RiboStructMapper is a bioinformatics tool that bridges the gap between **1D functional genomic data** and **3D structural biology**. It takes linear ribosome density data (from Ribosome Profiling/Ribo-Seq experiments) and maps those density scores directly onto the 3D atomic coordinates of a protein structure.
+RiboPrint is a bioinformatics tool that bridges the gap between **1D functional genomic data** and **3D structural biology**. It takes linear ribosome density data (from Ribosome Profiling/Ribo-Seq experiments) and maps those density scores directly onto the 3D atomic coordinates of a protein structure.
 
 By doing this, researchers can visually inspect exactly *where* on the folded protein structure ribosomes were actively translating, stalling, or slowing down during the experiment. 
 

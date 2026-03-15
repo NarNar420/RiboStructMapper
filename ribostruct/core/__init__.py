@@ -1,5 +1,5 @@
 """
-Core processing modules for RiboStructMapper.
+Core processing modules for RiboPrint.
 
 This package contains the fundamental modules for:
 - Parsing genomic data, PDB structures, and density files

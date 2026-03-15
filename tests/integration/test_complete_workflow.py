@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Complete end-to-end test for RiboStructMapper server.
+Complete end-to-end test for RiboPrint server.
 
 Tests all endpoints: submit_job, status, and download.
 Requires the server to be running.
@@ -17,9 +17,9 @@ def main():
     
     BASE_URL = "http://127.0.0.1:8000"
     
-    print("="*70)
-    print("RIBOSTRUCTMAPPER SERVER - COMPLETE END-TO-END TEST")
-    print("="*70)
+    print("=" * 60)
+    print("RIBOPRINT SERVER - COMPLETE END-TO-END TEST")
+    print("=" * 60)
     
     # Step 1: Check server is running
     print("\n[1/5] Checking server health...")

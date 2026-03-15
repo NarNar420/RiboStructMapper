@@ -1,13 +1,13 @@
-# Contributing to RiboStructMapper
+# Contributing to RiboPrint
 
-We welcome contributions to RiboStructMapper! This guide will help you get started.
+We welcome contributions to RiboPrint! This guide will help you get started.
 
 ## Development Setup
 
 ```bash
 # Clone the repository
 git clone <repository_url>
-cd RiboStructMapper
+cd RiboPrint
 
 # Create virtual environment
 python -m venv .venv
@@ -23,7 +23,7 @@ pytest tests/
 ## Project Structure
 
 ```
-RiboStructMapper/
+RiboPrint/
 ├── ribostruct/          # Main package
 │   ├── core/            # Core processing modules
 │   ├── cli/             # Command-line interface

@@ -1,5 +1,5 @@
 """
-Alignment Engine for RiboStructMapper.
+Alignment Engine for RiboPrint.
 
 This module provides functions to translate nucleotide sequences to amino acids
 and perform pairwise alignment between genomic and PDB sequences, generating

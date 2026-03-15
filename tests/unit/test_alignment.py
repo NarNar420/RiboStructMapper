@@ -51,7 +51,7 @@ def extract_pdb_sequence(pdb_path: str, chain_id: str = 'A') -> str:
 
 def main():
     print("="*60)
-    print("RiboStructMapper - Alignment Engine Test")
+    print("RiboPrint - Alignment Engine Test")
     print("="*60)
     
     # 1. Load and translate the genomic sequence
