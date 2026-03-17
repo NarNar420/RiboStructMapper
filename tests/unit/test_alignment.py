@@ -1,126 +1,106 @@
 """
-Test script for the Alignment Engine.
+QA Test script for the Alignment Engine: Robustness Evaluation
 
 This script verifies that:
 1. Nucleotide sequences can be translated to amino acids
-2. Pairwise alignment works correctly
-3. The mapping dictionary properly handles gaps (missing residues in PDB)
+2. Pairwise semi-global alignment works correctly for various realistic PDB states:
+   - Scenario A: Perfect Global Match
+   - Scenario B: Missing N-Terminus in PDB (Unmodeled start)
+   - Scenario C: Missing C-Terminus in PDB (Unmodeled end)
+   - Scenario D: Missing Internal Loop in PDB
+   - Scenario E: Single Residue Deletion / Mutation
 """
-
-from Bio import SeqIO
-from Bio.PDB import PDBParser
+import sys
+import unittest
 from ribostruct.core.alignment import translate_sequence, align_sequences
 
-
-
-def extract_pdb_sequence(pdb_path: str, chain_id: str = 'A') -> str:
-    """
-    Extract the amino acid sequence from a PDB file.
+class TestAlignmentEngineQA(unittest.TestCase):
     
-    Args:
-        pdb_path: Path to PDB file
-        chain_id: Chain identifier (default 'A')
+    def test_translate_sequence(self):
+        nucl = "ATGAAACCC"
+        self.assertEqual(translate_sequence(nucl), "MKP")
         
-    Returns:
-        Amino acid sequence as a string
-    """
-    parser = PDBParser(QUIET=True)
-    structure = parser.get_structure('protein', pdb_path)
-    
-    # Standard three-letter to one-letter amino acid code
-    aa_dict = {
-        'ALA': 'A', 'ARG': 'R', 'ASN': 'N', 'ASP': 'D', 'CYS': 'C',
-        'GLN': 'Q', 'GLU': 'E', 'GLY': 'G', 'HIS': 'H', 'ILE': 'I',
-        'LEU': 'L', 'LYS': 'K', 'MET': 'M', 'PHE': 'F', 'PRO': 'P',
-        'SER': 'S', 'THR': 'T', 'TRP': 'W', 'TYR': 'Y', 'VAL': 'V'
-    }
-    
-    sequence = []
-    for model in structure:
-        for chain in model:
-            if chain.id == chain_id:
-                for residue in chain:
-                    # Only consider standard amino acids
-                    if residue.id[0] == ' ':  # Not a heteroatom
-                        res_name = residue.get_resname()
-                        if res_name in aa_dict:
-                            sequence.append(aa_dict[res_name])
-    
-    return ''.join(sequence)
+    def test_scenario_a_perfect_match(self):
+        genomic = "MKTIIALSY"
+        pdb = "MKTIIALSY"
+        score, mapping = align_sequences(genomic, pdb)
+        
+        # Every index should map 1:1
+        self.assertEqual(len(mapping), 9)
+        for i in range(9):
+            self.assertEqual(mapping[i], i)
+            
+    def test_scenario_b_missing_n_terminus(self):
+        # The PDB structure is missing the first 3 residues (MKT)
+        genomic = "MKTIIALSY"
+        pdb = "IIALSY"
+        
+        score, mapping = align_sequences(genomic, pdb)
+        
+        # The first 3 genomic residues shouldn't map
+        self.assertNotIn(0, mapping)
+        self.assertNotIn(1, mapping)
+        self.assertNotIn(2, mapping)
+        
+        # Genomic index 3 ('I') should map to PDB index 0 ('I')
+        self.assertEqual(mapping[3], 0)
+        self.assertEqual(mapping[8], 5)
+        self.assertEqual(len(mapping), 6)
+        
+    def test_scenario_c_missing_c_terminus(self):
+        # The PDB structure is missing the last 3 residues (LSY)
+        genomic = "MKTIIALSY"
+        pdb = "MKTIIA"
+        
+        score, mapping = align_sequences(genomic, pdb)
+        
+        # Last 3 genomic residues shouldn't map
+        self.assertNotIn(6, mapping)
+        self.assertNotIn(7, mapping)
+        self.assertNotIn(8, mapping)
+        
+        # First 6 should map perfectly
+        self.assertEqual(mapping[0], 0)
+        self.assertEqual(mapping[5], 5)
+        self.assertEqual(len(mapping), 6)
+        
+    def test_scenario_d_missing_internal_loop(self):
+        # The PDB structure is missing a 3-residue loop in the middle (IIA)
+        genomic = "MKTIIALSY"
+        pdb = "MKTLSY"
+        
+        score, mapping = align_sequences(genomic, pdb)
+        
+        # The internal loop indices (3, 4, 5) should be skipped
+        self.assertNotIn(3, mapping)
+        self.assertNotIn(4, mapping)
+        self.assertNotIn(5, mapping)
+        
+        # Before loop
+        self.assertEqual(mapping[0], 0)
+        self.assertEqual(mapping[2], 2)
+        
+        # After loop
+        # Genomic index 6 ('L') should map to PDB index 3 ('L')
+        self.assertEqual(mapping[6], 3)
+        self.assertEqual(mapping[8], 5)
+        self.assertEqual(len(mapping), 6)
+        
+    def test_scenario_e_single_mutation_deletion(self):
+        # Similar to the original test script: PDB is missing exactly one residue (I at index 4) due to mutation
+        genomic = "MKTIIALSY"
+        pdb = "MKTIALSY"
+        
+        score, mapping = align_sequences(genomic, pdb)
+        
+        # Wait, the algorithm will naturally try to align the gap correctly.
+        # It's an ambiguous alignment whether it's the first or second I missing.
+        # But we know total mapped should be 8
+        self.assertEqual(len(mapping), 8)
+        
+        # Check mapping of end of chain to ensure correct shift
+        self.assertEqual(mapping[8], 7) # Genomic 'Y' (8) to PDB 'Y' (7)
+        
 
-
-def main():
-    print("="*60)
-    print("RiboPrint - Alignment Engine Test")
-    print("="*60)
-    
-    # 1. Load and translate the genomic sequence
-    print("\n[1] Loading mock genomic sequence...")
-    fasta_path = "data/mock/mock.fasta"
-    
-    fasta_records = list(SeqIO.parse(fasta_path, "fasta"))
-    nucleotide_seq = str(fasta_records[0].seq)
-    print(f"    Nucleotide sequence: {nucleotide_seq}")
-    print(f"    Length: {len(nucleotide_seq)} bp")
-    
-    genomic_aa = translate_sequence(nucleotide_seq)
-    print(f"\n[2] Translated to amino acids:")
-    print(f"    Genomic AA sequence: {genomic_aa}")
-    print(f"    Length: {len(genomic_aa)} residues")
-    
-    # 2. Extract PDB sequence
-    print(f"\n[3] Extracting sequence from PDB...")
-    pdb_path = "data/mock/mock.pdb"
-    pdb_aa_original = extract_pdb_sequence(pdb_path)
-    print(f"    Original PDB AA sequence: {pdb_aa_original}")
-    print(f"    Length: {len(pdb_aa_original)} residues")
-    
-    # 3. Introduce a mutation (delete one residue in the middle)
-    print(f"\n[4] Introducing mutation (deleting residue at position 7)...")
-    mutation_pos = 7  # 0-based index, so this is the 8th residue
-    pdb_aa_mutated = pdb_aa_original[:mutation_pos] + pdb_aa_original[mutation_pos + 1:]
-    print(f"    Deleted residue: {pdb_aa_original[mutation_pos]} at position {mutation_pos}")
-    print(f"    Mutated PDB AA sequence: {pdb_aa_mutated}")
-    print(f"    New length: {len(pdb_aa_mutated)} residues")
-    
-    # 4. Perform alignment
-    print(f"\n[5] Performing pairwise alignment...")
-    alignment_score, mapping_dict = align_sequences(genomic_aa, pdb_aa_mutated)
-    
-    print(f"\n{'='*60}")
-    print(f"ALIGNMENT RESULTS")
-    print(f"{'='*60}")
-    print(f"Alignment Score: {alignment_score}")
-    print(f"Total mappings: {len(mapping_dict)}")
-    print(f"\nFirst 5 mappings (Genomic Index -> PDB Index):")
-    
-    for i, (genomic_idx, pdb_idx) in enumerate(sorted(mapping_dict.items())[:5]):
-        genomic_residue = genomic_aa[genomic_idx]
-        pdb_residue = pdb_aa_mutated[pdb_idx]
-        print(f"  {genomic_idx:2d} -> {pdb_idx:2d}  |  {genomic_residue} -> {pdb_residue}")
-    
-    # 5. Verify gap handling
-    print(f"\n[6] Gap handling verification:")
-    print(f"    Expected: Position {mutation_pos} in genomic should NOT map to PDB")
-    
-    if mutation_pos in mapping_dict:
-        print(f"    ❌ FAILED: Position {mutation_pos} is in mapping (should be skipped)")
-    else:
-        print(f"    ✓ PASSED: Position {mutation_pos} correctly omitted from mapping")
-    
-    # Check that positions after the gap are shifted correctly
-    print(f"\n    Checking shift after gap:")
-    for genomic_idx in range(mutation_pos + 1, min(mutation_pos + 4, len(genomic_aa))):
-        if genomic_idx in mapping_dict:
-            expected_pdb_idx = genomic_idx - 1  # Should be shifted by 1 due to deletion
-            actual_pdb_idx = mapping_dict[genomic_idx]
-            match_status = "✓" if actual_pdb_idx == expected_pdb_idx else "❌"
-            print(f"    {match_status} Genomic[{genomic_idx}] -> PDB[{actual_pdb_idx}] (expected {expected_pdb_idx})")
-    
-    print(f"\n{'='*60}")
-    print("Test completed!")
-    print(f"{'='*60}\n")
-
-
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    unittest.main(verbosity=2)

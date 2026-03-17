@@ -55,13 +55,20 @@ def align_sequences(genomic_aa: str, pdb_aa: str) -> tuple[float, Dict[int, int]
         >>> score, mapping = align_sequences(genomic, pdb)
         >>> # mapping[3] will NOT exist because it's a gap in PDB
     """
-    # Configure PairwiseAligner with specified parameters
+    # Configure PairwiseAligner for Semi-Global Alignment (robust against partial PDBs)
     aligner = PairwiseAligner()
     aligner.mode = 'global'
     aligner.match_score = 2
     aligner.mismatch_score = -1
-    aligner.open_gap_score = -10
-    aligner.extend_gap_score = -0.5
+    
+    # Internal gap penalties: Reduced to allow jumping across unmodeled loops
+    aligner.open_gap_score = -5.0
+    aligner.extend_gap_score = -0.1
+    
+    # End gap penalties: Set to 0 to allow the PDB sequence to "float" and map to
+    # the middle of the genomic sequence without penalty if the N/C termini are unmodeled.
+    aligner.open_end_gap_score = 0
+    aligner.extend_end_gap_score = 0
     
     # Perform alignment
     alignments = aligner.align(genomic_aa, pdb_aa)
