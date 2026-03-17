@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "riboprint"
+version = "1.0.0"
+description = "A bioinformatics pipeline that integrates ribosome profiling data with protein structures."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "Einar Alhassid Gutkin" },
+    { name = "Ailie Marx" }
+]
+keywords = ["bioinformatics", "ribosome-profiling", "structural-biology", "pdb", "visualization"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12"
+]
+dependencies = [
+    "biopython>=1.86",
+    "pandas>=2.2.3",
+    "numpy>=2.1.3",
+    "scipy>=1.14.1",
+    "scikit-learn>=1.5.2",
+    "fastapi>=0.128.2",
+    "uvicorn>=0.40.0",
+    "python-multipart>=0.0.20",
+    "requests>=2.32.5"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0.2"
+]
+
+[project.scripts]
+riboprint = "ribostruct.cli.main:main"
+
+[project.urls]
+"Homepage" = "https://github.com/NarNar420/RiboStructMapper"
+"Bug Tracker" = "https://github.com/NarNar420/RiboStructMapper/issues"
+
+[tool.setuptools.packages.find]
+include = ["ribostruct*"]

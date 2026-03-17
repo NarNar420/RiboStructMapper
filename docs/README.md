@@ -7,6 +7,7 @@ RiboPrint is a bioinformatics web application that integrates ribosome profiling
 [![Python](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.128-green.svg)](https://fastapi.tiangolo.com/)
 [![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://www.docker.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
@@ -18,7 +19,8 @@ RiboPrint is a bioinformatics web application that integrates ribosome profiling
 - 📊 **Density Aggregation** - Nucleotide-to-amino acid mapping (mean/max/sum/median)
 - ⚙️ **Offset Correction** - Ribosome position phase adjustment
 - 💉 **B-Factor Injection** - Writes density scores to PDB for visualization
-- 🌐 **Web Interface** - Modern dark-mode UI for easy file uploads
+- 🌐 **Web Interface** - Clean academic White/Green UI layout
+- 🔎 **Interactive 3D Viewer** - Embedded browser viewing of mapped structures with dynamic color gradients
 - 📡 **REST API** - Programmatic access for automation
 - 🧹 **Auto Cleanup** - Automatic deletion of jobs older than 24 hours
 - 🐳 **Docker Ready** - One-command deployment anywhere
@@ -352,8 +354,8 @@ uvicorn server:app --reload --log-level debug
 
 If you use RiboPrint in your research, please cite:
 
-```
-[Your citation information here]
+```text
+Alhassid Gutkin, E., & Marx, A. (2026). RiboPrint: Mapping ribosome density data onto protein structures. Marx Structural Biology Group.
 ```
 
 ---
@@ -366,7 +368,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📜 License
 
-[Your license information here]
+This project is licensed under the **MIT License**. For full details, see the [LICENSE](../LICENSE) file.
 
 ---
 
@@ -382,7 +384,7 @@ For issues, questions, or feature requests:
 
 ## 👥 Authors
 
-[Your author information here]
+Einar Alhassid Gutkin, Ailie Marx (Marx Structural Biology Group)
 
 ---
 

@@ -7,6 +7,7 @@ RiboPrint is a bioinformatics pipeline that integrates ribosome profiling data w
 [![Python](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.128-green.svg)](https://fastapi.tiangolo.com/)
 [![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://www.docker.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
@@ -80,7 +81,8 @@ RiboPrint/
 - 📊 **Density Aggregation** - Nucleotide-to-amino acid mapping
 - ⚙️ **Offset Correction** - Ribosome position phase adjustment
 - 💉 **B-Factor Injection** - Writes density scores to PDB for visualization
-- 🌐 **Web Interface** - Modern dark-mode UI
+- 🌐 **Web Interface** - Clean academic White/Green UI layout
+- 🔎 **Interactive 3D Viewer** - Embedded browser viewing of mapped structures with dynamic color gradients
 - 📡 **REST API** - Programmatic access
 - 🐳 **Docker Ready** - One-command deployment
 
