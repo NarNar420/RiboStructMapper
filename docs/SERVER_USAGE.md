@@ -9,11 +9,11 @@ source .venv/bin/activate
 uvicorn server:app --reload
 ```
 
-The server will start at `http://127.0.0.1:8000`
+The server will start at `http://riboprint.marx-group.edu:8000`
 
 ## Using the Swagger UI
 
-1. Open your browser and navigate to: `http://127.0.0.1:8000/docs`
+1. Open your browser and navigate to: `http://riboprint.marx-group.edu:8000/docs`
 
 2. You'll see the interactive API documentation (Swagger UI)
 

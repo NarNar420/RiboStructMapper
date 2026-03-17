@@ -12,7 +12,7 @@ uvicorn ribostruct.web.server:app --reload
 ```
 
 ### 2. Open Your Browser
-Navigate to: **http://localhost:8000**
+Navigate to: **http://riboprint.marx-group.edu:8000**
 
 ### 3. Prepare Your Files
 You need **4 files**:

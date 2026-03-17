@@ -125,7 +125,7 @@ server {
     client_max_body_size 100M;  # Allow large file uploads
 
     location / {
-        proxy_pass http://localhost:8000;
+        proxy_pass http://riboprint.marx-group.edu:8000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -218,7 +218,7 @@ limit_req_zone $binary_remote_addr zone=ribostruct:10m rate=10r/m;
 
 location /submit_job {
     limit_req zone=ribostruct burst=5;
-    proxy_pass http://localhost:8000;
+    proxy_pass http://riboprint.marx-group.edu:8000;
     # ... other proxy settings
 }
 ```

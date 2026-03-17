@@ -40,7 +40,7 @@ docker build -t ribostruct .
 docker run -p 8000:8000 ribostruct
 ```
 
-**Access the application**: http://localhost:8000
+**Access the application**: http://riboprint.marx-group.edu:8000
 
 ### Option 2: Manual Installation
 
@@ -52,7 +52,7 @@ pip install -r requirements.txt
 uvicorn server:app --reload
 ```
 
-**Access the application**: http://127.0.0.1:8000
+**Access the application**: http://riboprint.marx-group.edu:8000
 
 ---
 
@@ -78,7 +78,7 @@ uvicorn server:app --reload
 
 The web interface provides an intuitive way to process your data:
 
-1. Open http://localhost:8000 in your browser
+1. Open http://riboprint.marx-group.edu:8000 in your browser
 2. Upload the 4 required files (PDB, FASTA, GTF, bedGraph)
 3. Enter offset values (e.g., `0,-12`)
 4. Click "Process Files"
@@ -95,7 +95,7 @@ Submit a new processing job.
 
 **Request:**
 ```bash
-curl -X POST "http://localhost:8000/submit_job" \
+curl -X POST "http://riboprint.marx-group.edu:8000/submit_job" \
   -F "pdb_file=@protein.pdb" \
   -F "fasta_file=@genome.fasta" \
   -F "gtf_file=@annotation.gtf" \
@@ -118,7 +118,7 @@ Check job status.
 
 **Request:**
 ```bash
-curl "http://localhost:8000/status/a3b8d1b6-0b3b-4b1a-9c1a-1a2b3c4d5e6f"
+curl "http://riboprint.marx-group.edu:8000/status/a3b8d1b6-0b3b-4b1a-9c1a-1a2b3c4d5e6f"
 ```
 
 **Response:**
@@ -143,7 +143,7 @@ Download results as ZIP file.
 
 **Request:**
 ```bash
-curl "http://localhost:8000/download/a3b8d1b6-0b3b-4b1a-9c1a-1a2b3c4d5e6f" \
+curl "http://riboprint.marx-group.edu:8000/download/a3b8d1b6-0b3b-4b1a-9c1a-1a2b3c4d5e6f" \
   -o results.zip
 ```
 
@@ -159,7 +159,7 @@ Server health check.
 
 **Request:**
 ```bash
-curl "http://localhost:8000/health"
+curl "http://riboprint.marx-group.edu:8000/health"
 ```
 
 **Response:**
@@ -307,7 +307,7 @@ See [DOCKER.md](DOCKER.md) for detailed deployment instructions including:
 uvicorn server:app --reload
 
 # 2. Submit a job via API
-JOB_ID=$(curl -X POST "http://localhost:8000/submit_job" \
+JOB_ID=$(curl -X POST "http://riboprint.marx-group.edu:8000/submit_job" \
   -F "pdb_file=@data/protein.pdb" \
   -F "fasta_file=@data/genome.fasta" \
   -F "gtf_file=@data/annotation.gtf" \
@@ -315,10 +315,10 @@ JOB_ID=$(curl -X POST "http://localhost:8000/submit_job" \
   -F "offsets=0,-12" | jq -r '.job_id')
 
 # 3. Monitor status
-watch -n 2 curl -s "http://localhost:8000/status/$JOB_ID" | jq
+watch -n 2 curl -s "http://riboprint.marx-group.edu:8000/status/$JOB_ID" | jq
 
 # 4. Download results when complete
-curl "http://localhost:8000/download/$JOB_ID" -o results.zip
+curl "http://riboprint.marx-group.edu:8000/download/$JOB_ID" -o results.zip
 
 # 5. Extract and visualize in PyMOL/ChimeraX
 unzip results.zip

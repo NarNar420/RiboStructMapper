@@ -30,7 +30,7 @@ For comprehensive documentation, see the [`docs/`](docs/) directory:
 docker-compose up -d
 ```
 
-**Access the application**: http://localhost:8000
+**Access the application**: http://riboprint.marx-group.edu:8000
 
 ### Manual Installation
 
@@ -39,7 +39,7 @@ pip install -r requirements.txt
 uvicorn ribostruct.web.server:app --reload
 ```
 
-**Access the application**: http://127.0.0.1:8000
+**Access the application**: http://riboprint.marx-group.edu:8000
 
 ---
 
@@ -106,7 +106,7 @@ pytest tests/api/
 
 ### Web Interface
 
-1. Open http://localhost:8000
+1. Open http://riboprint.marx-group.edu:8000
 2. Upload required files (PDB, FASTA, GTF, bedGraph)
 3. Enter offset values (e.g., `0,-12`)
 4. Click "Process Files"
@@ -156,7 +156,13 @@ uvicorn ribostruct.web.server:app --reload --log-level debug
 
 ## 📜 License
 
-[Your license information here]
+This project is licensed under the **MIT License**. For full details, see the [LICENSE](LICENSE) file. 
+
+The MIT License is a permissive free software license that allows anyone to do almost anything they want with the project (including commercial use, modification, and distribution), as long as they include the original copyright and license notice.
+
+---
+
+**Authors**: Einar Alhassid Gutkin, Ailie Marx (Marx Structural Biology Group)
 
 ---
 

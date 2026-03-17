@@ -15,7 +15,7 @@ docker-compose logs -f
 docker-compose down
 ```
 
-The application will be available at: **http://localhost:8000**
+The application will be available at: **http://riboprint.marx-group.edu:8000**
 
 ### Option 2: Docker CLI
 
@@ -88,7 +88,7 @@ server {
     server_name ribostruct.example.com;
 
     location / {
-        proxy_pass http://localhost:8000;
+        proxy_pass http://riboprint.marx-group.edu:8000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -134,7 +134,7 @@ After starting the container, verify it's working:
 
 ```bash
 # Check health
-curl http://localhost:8000/health
+curl http://riboprint.marx-group.edu:8000/health
 
 # Expected output:
 # {
@@ -144,7 +144,7 @@ curl http://localhost:8000/health
 # }
 ```
 
-Open browser: **http://localhost:8000**
+Open browser: **http://riboprint.marx-group.edu:8000**
 
 ---
 
