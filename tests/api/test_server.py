@@ -98,7 +98,6 @@ def test_submit_job():
         files = {
             "pdb_file": ("mock.pdb", open(mock_dir / "mock.pdb", "rb"), "chemical/x-pdb"),
             "fasta_file": ("mock.fasta", open(mock_dir / "mock.fasta", "rb"), "text/plain"),
-            "gtf_file": ("mock.gtf", open(mock_dir / "mock.gtf", "rb"), "text/plain"),
             "density_file": ("mock.bedgraph", open(mock_dir / "mock.bedgraph", "rb"), "text/plain"),
         }
         
@@ -133,7 +132,7 @@ def test_submit_job():
         print(f"✓ Job directory created: {job_dir}")
         
         # Verify all files were saved
-        expected_files = ["input.pdb", "input.fasta", "input.gtf", "input.bedgraph", "params.txt", "status.txt"]
+        expected_files = ["input.pdb", "input.fasta", "input.bedgraph", "params.txt", "status.txt"]
         for filename in expected_files:
             file_path = job_dir / filename
             assert file_path.exists(), f"File should exist: {file_path}"
@@ -178,7 +177,6 @@ def test_multiple_job_submissions():
             files = {
                 "pdb_file": ("mock.pdb", open(mock_dir / "mock.pdb", "rb")),
                 "fasta_file": ("mock.fasta", open(mock_dir / "mock.fasta", "rb")),
-                "gtf_file": ("mock.gtf", open(mock_dir / "mock.gtf", "rb")),
                 "density_file": ("mock.bedgraph", open(mock_dir / "mock.bedgraph", "rb")),
             }
             

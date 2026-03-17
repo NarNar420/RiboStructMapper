@@ -24,9 +24,9 @@ This is the core "Brain" of the app. The backend should be divided into these sp
 
 #### **Module A: The Input Parser**
 
-* **Function 1: `parse_genomic_data(fasta, gtf, gene_id)**`
-* **Logic:** parses the GTF/GFF to find the Coding Sequence (CDS) coordinates for the specific gene. It extracts the corresponding nucleotide sequence from the FASTA file.
-* **Output:** A raw nucleotide string (DNA/RNA) and a coordinate map (Genomic Coordinate  Nucleotide Index).
+* **Function 1: `parse_genomic_data(fasta_path)**`
+* **Logic:** Parses the FASTA header to extract the genomic coordinates (chromosome, start, end) for the CDS. The sequence body is used directly as the nucleotide string.
+* **Output:** A raw nucleotide string (DNA/RNA) and genomic metadata (chromosome, start position).
 
 
 * **Function 2: `parse_ribo_density(density_file, coordinates)**`
@@ -99,10 +99,10 @@ This is the core "Brain" of the app. The backend should be divided into these sp
 
 1. **`POST /upload_job`**
 * **Body:** Multipart form data containing:
-* `.pdb` file
-* Sequence files (FASTA + GTF)
-* Density file (bedGraph)
-* JSON Configuration: `{"offsets": [0, -40, -90], "aggregation": "mean", "chain": "A"}`
+  * `.pdb` file
+  * `.fasta` CDS sequence file
+  * Density file (`.bedgraph`)
+  * JSON Configuration: `{"offsets": [0, 12, 15], "aggregation": "mean", "chain": "A"}`
 
 
 * **Response:** `job_id` (UUID).
@@ -113,7 +113,7 @@ This is the core "Brain" of the app. The backend should be divided into these sp
 
 
 3. **`GET /download/{job_id}`**
-* **Response:** A ZIP file containing all generated PDBs (e.g., `protein_offset_0.pdb`, `protein_offset_-40.pdb`).
+* **Response:** A ZIP file containing all generated PDBs (e.g., `protein_offset_0.pdb`, `protein_offset_12.pdb`).
 
 
 
@@ -129,13 +129,13 @@ This is the core "Brain" of the app. The backend should be divided into these sp
 **Section 1: The Input Deck**
 
 * **Structure Upload:** Drag & drop zone for `.pdb`.
-* **Genomic Context:** Drag & drop for `.fasta` and `.gtf`/`.gff`.
-* **Experimental Data:** Drag & drop for ribosome density file.
+* **Genomic Context:** Drag & drop for `.fasta` (CDS sequence, coordinate-encoded in header).
+* **Experimental Data:** Drag & drop for ribosome density file (`.bedgraph`).
 
 **Section 2: Configuration Panel**
 
 * **Aggregation Method:** Dropdown menu (Average, Sum, Max).
-* **Offsets:** An input field to accept comma-separated integers (e.g., `0, -30, -60`).
+* **Offsets:** An input field to accept comma-separated absolute integers (e.g., `0, 12, 15`).
 * **Chain Selection:** (Optional) Input for specific PDB chain ID (default: "A" or "All").
 
 **Section 3: Action & Output**
@@ -148,16 +148,16 @@ This is the core "Brain" of the app. The backend should be divided into these sp
 
 ### **5. Edge Cases & Error Handling to Plan For**
 
-1. **Coordinate Mismatch:** The GTF coordinates don't match the FASTA headers.
-* *Solution:* Validate headers before processing.
+1. **Coordinate Mismatch:** The genomic coordinates in the FASTA header don't overlap with the bedGraph coverage region.
+* *Solution:* Validate coordinate ranges before processing and return a clear error message.
 
 
 2. **The "Missing Density" Problem:** The PDB file is missing a loop (residues 50-60 are absent in the structure but present in the genome).
 * *Solution:* The alignment step must detect this. The density scores for genomic residues 50-60 are simply ignored/discarded because there are no atoms to write them to.
 
 
-3. **Multiple Transcripts:** The GTF contains multiple isoforms for the gene.
-* *Solution:* The app should either ask the user to specify a `transcript_id` or default to the longest CDS (Canonical).
+3. **Partial Structures:** The PDB model only captures a sub-region of the full protein.
+* *Solution:* Semi-global alignment is used to handle missing N/C termini or internal gaps without penalising unmodelled regions.
 
 
 

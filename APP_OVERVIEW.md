@@ -10,7 +10,7 @@ By doing this, researchers can visually inspect exactly *where* on the folded pr
 
 The pipeline operates in five core steps:
 
-1. **Genomic Parsing**: Extracts the exact Coding Sequence (CDS) for a gene using a FASTA sequence and GTF annotation file.
+1. **Genomic Parsing**: Extracts the exact Coding Sequence (CDS) for a gene directly from a FASTA sequence file. The FASTA header encodes the genomic coordinates (chromosome, start, end) needed to pull matching ribosome density data.
 2. **Density Extraction**: Pulls the linear ribosome density scores from a `bedGraph` file that match the extracted CDS coordinates.
 3. **Sequence Alignment**: Translates the genomic DNA/RNA into a theoretical amino acid sequence and performs a global alignment against the actual sequences extracted from the physical `ATOM` records of the provided PDB file. This handles missing residues or gaps in the 3D structure.
 4. **Offset & Aggregation**: 

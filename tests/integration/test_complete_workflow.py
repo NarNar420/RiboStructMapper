@@ -50,13 +50,11 @@ def main():
     try:
         with open(mock_dir / "mock.pdb", "rb") as pdb, \
              open(mock_dir / "mock.fasta", "rb") as fasta, \
-             open(mock_dir / "mock.gtf", "rb") as gtf, \
              open(mock_dir / "mock.bedgraph", "rb") as bedgraph:
             
             files = {
                 "pdb_file": ("mock.pdb", pdb),
                 "fasta_file": ("mock.fasta", fasta),
-                "gtf_file": ("mock.gtf", gtf),
                 "density_file": ("mock.bedgraph", bedgraph),
             }
             

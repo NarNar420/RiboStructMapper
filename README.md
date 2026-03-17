@@ -75,7 +75,7 @@ RiboPrint/
 
 ## ✨ Features
 
-- 🧬 **Genomic Data Parsing** - Extracts CDS from FASTA + GTF annotations
+- 🧬 **Genomic Data Parsing** - Extracts CDS from FASTA sequence
 - 🔬 **Structure Processing** - Parses PDB files and extracts amino acid sequences
 - 🧮 **Sequence Alignment** - Global alignment with gap handling
 - 📊 **Density Aggregation** - Nucleotide-to-amino acid mapping
@@ -107,7 +107,7 @@ pytest tests/api/
 ### Web Interface
 
 1. Open http://riboprint.marx-group.edu:8000
-2. Upload required files (PDB, FASTA, GTF, bedGraph)
+2. Upload required files (PDB, FASTA, bedGraph)
 3. Enter offset values (e.g., `0,12`)
 4. Click "Process Files"
 5. Download results as ZIP
@@ -126,7 +126,6 @@ from ribostruct.cli.main import run_pipeline
 output_files = run_pipeline(
     pdb_path="protein.pdb",
     fasta_path="genome.fasta",
-    gtf_path="annotation.gtf",
     bedgraph_path="density.bedgraph",
     offsets=[0, 12, 15]
 )

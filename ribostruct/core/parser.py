@@ -56,22 +56,6 @@ def sanitize_sequence(sequence: str) -> Tuple[str, int]:
     
     return seq, start_index
 
-
-def _parse_gtf_attributes(attr_str: str) -> dict:
-    attrs = {}
-    for part in attr_str.strip().split(";"):
-        part = part.strip()
-        if not part:
-            continue
-        if " " in part:
-            key, val = part.split(" ", 1)
-            val = val.strip().strip('"')
-            attrs[key] = val
-        else:
-            attrs[part] = ""
-    return attrs
-
-
 def _find_seq_record(key: str, seq_records: dict):
     if key in seq_records:
         return seq_records[key]
@@ -288,7 +272,7 @@ def parse_ribo_density(density_file: str, chrom: str, start: int, end: int) -> n
     
     Note:
         BedGraph uses 0-based half-open coordinates [start, end), but this function
-        expects and returns 1-based inclusive coordinates for consistency with GTF.
+        expects and returns 1-based inclusive coordinates for consistency with other genomic formats.
     """
     if not os.path.exists(density_file):
         raise FileNotFoundError(f"Density file not found: {density_file}")

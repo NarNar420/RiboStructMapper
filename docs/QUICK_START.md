@@ -15,10 +15,9 @@ uvicorn ribostruct.web.server:app --reload
 Navigate to: **http://riboprint.marx-group.edu:8000**
 
 ### 3. Prepare Your Files
-You need **4 files**:
+You need **3 files**:
 - **PDB file** (`.pdb`) - Your protein structure
-- **FASTA file** (`.fasta`) - Genomic sequence
-- **GTF file** (`.gtf`) - Gene annotation
+- **FASTA file** (`.fasta`) - Genomic CDS sequence
 - **bedGraph file** (`.bedgraph`) - Ribosome density data
 
 ### 4. Upload and Process
@@ -52,10 +51,10 @@ Each PDB file has **ribosome density scores in the B-factor column** - ready for
 ## 🆘 Troubleshooting
 
 **Upload fails?**  
-→ Check file formats match requirements (`.pdb`, `.fasta`, `.gtf`, `.bedgraph`)
+→ Check file formats match requirements (`.pdb`, `.fasta`, `.bedgraph`)
 
 **Processing fails?**  
-→ Ensure gene ID exists in GTF and chromosome names match between files
+→ Ensure the FASTA sequence covers the correct CDS coordinates and chromosome names match between FASTA header and bedGraph
 
 **Download not working?**  
 → Wait for status to show "completed" before downloading

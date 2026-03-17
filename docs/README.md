@@ -13,7 +13,7 @@ RiboPrint is a bioinformatics web application that integrates ribosome profiling
 
 ## ✨ Features
 
-- 🧬 **Genomic Data Parsing** - Extracts CDS from FASTA + GTF annotations
+- 🧬 **Genomic Data Parsing** - Extracts CDS from FASTA sequence
 - 🔬 **Structure Processing** - Parses PDB files and extracts amino acid sequences
 - 🧮 **Sequence Alignment** - Global alignment with gap handling
 - 📊 **Density Aggregation** - Nucleotide-to-amino acid mapping (mean/max/sum/median)
@@ -61,10 +61,9 @@ uvicorn server:app --reload
 ### Input Files
 
 1. **PDB File** (`.pdb`) - Protein structure in PDB format
-2. **FASTA File** (`.fasta`) - Genomic sequence
-3. **GTF File** (`.gtf`) - Gene annotations
-4. **bedGraph File** (`.bedgraph`) - Ribosome density data
-5. **Offset Values** - Comma-separated integers (e.g., `0,12,15`)
+2. **FASTA File** (`.fasta`) - Genomic CDS sequence
+3. **bedGraph File** (`.bedgraph`) - Ribosome density data
+4. **Offset Values** - Comma-separated integers (e.g., `0,12,15`)
 
 ### System Requirements
 
@@ -79,7 +78,7 @@ uvicorn server:app --reload
 The web interface provides an intuitive way to process your data:
 
 1. Open http://riboprint.marx-group.edu:8000 in your browser
-2. Upload the 4 required files (PDB, FASTA, GTF, bedGraph)
+2. Upload the 3 required files (PDB, FASTA, bedGraph)
 3. Enter offset values (e.g., `0,12`)
 4. Click "Process Files"
 5. Wait for processing (status updates every 2 seconds)
@@ -98,7 +97,6 @@ Submit a new processing job.
 curl -X POST "http://riboprint.marx-group.edu:8000/submit_job" \
   -F "pdb_file=@protein.pdb" \
   -F "fasta_file=@genome.fasta" \
-  -F "gtf_file=@annotation.gtf" \
   -F "density_file=@density.bedgraph" \
   -F "offsets=0,12,15"
 ```
@@ -210,18 +208,6 @@ Standard genomic sequence format:
 ATGAAAACCATAATAGCTCTGTCTTACATATTCTGCCTGGTGTTC
 ```
 
-### GTF Format
-
-Gene annotation format with CDS features:
-
-```gtf
-mock_chrom	test	CDS	1	45	.	+	0	gene_id "MOCK1"; transcript_id "MOCK1.1";
-```
-
-**Requirements:**
-- Feature type must be `CDS`
-- Must include `gene_id` and `transcript_id` attributes
-
 ---
 
 ## 🧪 Testing
@@ -243,7 +229,7 @@ pytest tests/integration/
 ```
 RiboPrint/
 ├── Core Modules
-│   ├── parser.py         # FASTA/GTF/PDB/bedGraph parsing
+│   ├── parser.py         # FASTA/PDB/bedGraph parsing
 │   ├── alignment.py      # Sequence translation and alignment
 │   ├── processor.py      # Density aggregation and offset application
 │   └── injector.py       # B-factor injection into PDB
@@ -310,7 +296,6 @@ uvicorn server:app --reload
 JOB_ID=$(curl -X POST "http://riboprint.marx-group.edu:8000/submit_job" \
   -F "pdb_file=@data/protein.pdb" \
   -F "fasta_file=@data/genome.fasta" \
-  -F "gtf_file=@data/annotation.gtf" \
   -F "density_file=@data/density.bedgraph" \
   -F "offsets=0,12" | jq -r '.job_id')
 

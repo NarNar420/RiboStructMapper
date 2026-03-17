@@ -23,8 +23,7 @@ The server will start at `http://riboprint.marx-group.edu:8000`
 
 5. Upload your files:
    - **pdb_file**: Click "Choose File" and select your PDB file
-   - **fasta_file**: Select your genomic FASTA file  
-   - **gtf_file**: Select your GTF/GFF annotation file
+   - **fasta_file**: Select your genomic FASTA (CDS) file
    - **density_file**: Select your bedGraph density file
    - **offsets**: Enter comma-separated values (e.g., `0,10,15`)
 
@@ -70,12 +69,11 @@ jobs/
 └── {job_id}/
     ├── input.pdb          # Uploaded PDB file
     ├── input.fasta        # Uploaded FASTA file
-    ├── input.gtf          # Uploaded GTF file
     ├── input.bedgraph     # Uploaded bedGraph file
     ├── params.txt         # Job parameters
     ├── status.txt         # Current status
     ├── output_offset_0.pdb      # Generated output (when complete)
-    ├── output_offset_-10.pdb    # Generated output (when complete)
+    ├── output_offset_10.pdb     # Generated output (when complete)
     ├── output_files.txt   # Log of generated files
     └── error.txt          # Error details (if failed)
 ```

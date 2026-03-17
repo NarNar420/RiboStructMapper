@@ -45,7 +45,6 @@ def test_status_and_download():
     files = {
         "pdb_file": ("mock.pdb", open(mock_dir / "mock.pdb", "rb")),
         "fasta_file": ("mock.fasta", open(mock_dir / "mock.fasta", "rb")),
-        "gtf_file": ("mock.gtf", open(mock_dir / "mock.gtf", "rb")),
         "density_file": ("mock.bedgraph", open(mock_dir / "mock.bedgraph", "rb")),
     }
     

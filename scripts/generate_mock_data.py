@@ -16,8 +16,6 @@ Generate a biologically and geometrically reasonable mock dataset:
    - Nucleotide coding sequence (CDS) that translates exactly to the
      protein sequence: MKTIIALSYIFCLVF
 
-3. `mock.gtf`:
-   - Single CDS entry covering the full coding sequence.
 
 The script prints:
 
@@ -35,7 +33,6 @@ ROOT_DIR = Path(__file__).resolve().parent
 
 PDB_FILENAME = "mock.pdb"
 FASTA_FILENAME = "mock.fasta"
-GTF_FILENAME = "mock.gtf"
 
 CHROM_NAME = "mock_chrom"
 GENE_ID = "GENE1"
@@ -94,24 +91,16 @@ def protein_to_cds(protein_seq: str) -> str:
 
 
 def write_fasta(path: Path, dna_seq: str) -> None:
-    """Write the coding DNA sequence as a single FASTA record."""
-    lines = [">mock_cds"]
+    """Write the coding DNA sequence as a single FASTA record with genomic coordinates."""
+    length = len(dna_seq)
+    # Header format: >ID Chrom:Start..End
+    header = f">{GENE_ID} {CHROM_NAME}:1..{length}"
+    lines = [header]
     lines.extend(wrap(dna_seq, 60))
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def write_gtf(path: Path, dna_seq: str) -> None:
-    """
-    Write a minimal GTF file with a single CDS entry that spans the
-    full length of the nucleotide sequence.
-    """
-    length = len(dna_seq)
-    attributes = f'gene_id "{GENE_ID}"; transcript_id "{TRANSCRIPT_ID}";'
-    line = (
-        f"{CHROM_NAME}\tmock\tCDS\t1\t{length}\t.\t+\t0\t"
-        f"{attributes}"
-    )
-    path.write_text(line + "\n", encoding="utf-8")
+
 
 
 def _format_atom_line(
@@ -358,11 +347,9 @@ def main() -> None:
     dna_seq = protein_to_cds(protein_seq)
 
     fasta_path = ROOT_DIR / FASTA_FILENAME
-    gtf_path = ROOT_DIR / GTF_FILENAME
     pdb_path = ROOT_DIR / PDB_FILENAME
 
     write_fasta(fasta_path, dna_seq)
-    write_gtf(gtf_path, dna_seq)
     atom_count = write_pdb(pdb_path, protein_seq)
 
     print(f"Generated mock.pdb with {atom_count} atoms.")

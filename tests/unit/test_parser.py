@@ -1,5 +1,5 @@
 """
-Tests for FASTA-only mode (without GTF).
+Tests for FASTA-only mode .
 """
 import pytest
 import os

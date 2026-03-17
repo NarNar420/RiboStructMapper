@@ -36,12 +36,11 @@ def test_server_background_processing():
     files = {
         "pdb_file": ("mock.pdb", open(mock_dir / "mock.pdb", "rb")),
         "fasta_file": ("mock.fasta", open(mock_dir / "mock.fasta", "rb")),
-        "gtf_file": ("mock.gtf", open(mock_dir / "mock.gtf", "rb")),
         "density_file": ("mock.bedgraph", open(mock_dir / "mock.bedgraph", "rb")),
     }
     
     data = {
-        "offsets": "0,-12"
+        "offsets": "0,12"
     }
     
     print("\n[1] Submitting job...")
