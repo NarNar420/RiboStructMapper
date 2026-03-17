@@ -16,47 +16,43 @@ from typing import Dict, List
 
 def shift_nucleotide_density(density: np.ndarray, offset: int) -> np.ndarray:
     """
-    Shift nucleotide density values by the specified offset.
+    Shift nucleotide density values downstream by the specified absolute offset.
     
     This function applies ribosome position correction at the nucleotide level.
-    Negative offsets shift density upstream (towards 5' end).
+    The offset is treated as an absolute value to enforce a strict one-way 
+    biological shift downstream (towards the 3' already-translated sequence),
+    accounting for the ribosome's A/P site distance from the footprint start.
     
     Args:
         density: Nucleotide-level density array
-        offset: Number of nucleotides to shift (negative = upstream)
+        offset: Number of nucleotides to shift downstream (absolute value is used).
     
     Returns:
         Shifted density array with zero-filled edges (no wrapping)
     
     Example:
-        Input:  [10, 20, 30, 40, 50]
-        Offset: -2 (shift upstream by 2 nt)
-        Output: [30, 40, 50, 0, 0]
+        Input:  [10, 20, 30, 40, 50, 60]
+        Offset: 2 (shift downstream by 2 nt)
+        Output: [0, 0, 10, 20, 30, 40]
         
         The value at position i moves to position i+offset.
-        For offset=-2: position 2 moves to position 0, etc.
     """
     if offset == 0:
         return density.copy()
     
-    # Invert offset sign to match user expectation:
-    # User wants negative offset to shift DOWNSTREAM (to the right, higher index)
-    # np.roll shifts right with positive values, left with negative.
-    # So we use -offset as the shift amount.
-    # Example: offset = -12. We want shift +12 (right). shift = -(-12) = +12.
-    shift = -offset
+    # Enforce strict one-way biological shift downstream (towards 3' end)
+    # Regardless of positive or negative input, take the absolute value.
+    shift_amount = abs(offset)
     
     # Create output array filled with zeros
     shifted = np.zeros_like(density, dtype=float)
     
-    if shift < 0:
-        # Negative shift: shift left (upstream)
-        # Values from positions [-shift:] move to positions [0:len+shift]
-        shifted[:len(density) + shift] = density[-shift:]
-    else:
-        # Positive shift: shift right (downstream)
-        # Values from positions [:-shift] move to positions [shift:]
-        shifted[shift:] = density[:-shift]
+    if shift_amount >= len(density):
+        return shifted # Offset is larger than the density array itself
+        
+    # Strictly Positive shift: shift right (downstream)
+    # Values from positions [:-shift_amount] move to positions [shift_amount:]
+    shifted[shift_amount:] = density[:-shift_amount]
     
     return shifted
 
@@ -137,13 +133,13 @@ def process_offsets(
     
     Example:
         raw_density = np.array([10, 10, 10, 20, 20, 20])
-        offsets = [0, -3]
+        offsets = [0, 3]  
         method = 'mean'
         
         Result:
         {
             0: [10.0, 20.0],      # No shift: codon1=(10,10,10), codon2=(20,20,20)
-            -3: [16.67, 6.67]     # Shift -3: codon1=(20,20,20), codon2=(0,0,0)
+            3: [0.0, 10.0]        # Shift 3 downstream: codon1=(0,0,0), codon2=(10,10,10)
         }
     """
     results = {}

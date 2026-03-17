@@ -43,7 +43,7 @@ def reproduce():
     print(f"First 10 vals: {density[:10]}")
     
     if np.sum(density) == 0:
-        print("!!! DENSITY IS ALL ZERO !!!")
+        print("WARNING: Density vector is entirely zero. Check the chromosome/coordinate match.")
         
     # 3. Translate
     print("\n[3] Translation Check")
@@ -69,7 +69,7 @@ def reproduce():
             pdb_path=pdb_path,
             fasta_path=fasta_path,
             bedgraph_path=bedgraph_path,
-            offsets=[0, -12],
+            offsets=[0, 12],
             output_dir="tests/output_real_debug"
         )
         print("Pipeline finished.")

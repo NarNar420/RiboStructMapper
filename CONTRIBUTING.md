@@ -6,7 +6,7 @@ We welcome contributions to RiboPrint! This guide will help you get started.
 
 ```bash
 # Clone the repository
-git clone <repository_url>
+git clone https://github.com/NarNar420/RiboStructMapper.git
 cd RiboPrint
 
 # Create virtual environment
@@ -62,12 +62,10 @@ pytest tests/ --cov=ribostruct
 ## Pull Request Process
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
-4. Run tests to ensure everything works
-5. Commit your changes (`git commit -m 'Add amazing feature'`)
-6. Push to the branch (`git push origin feature/amazing-feature`)
-7. Open a Pull Request
+2. Create a feature branch (`git checkout -b feature/my-feature`)
+3. Commit your changes with a clear message (`git commit -m 'feat: add new feature'`)
+4. Push to your branch (`git push origin feature/my-feature`)
+5. Open a Pull Request against `main` describing what was changed and why
 
 ## Questions?
 

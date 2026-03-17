@@ -49,7 +49,7 @@ def test_status_and_download():
         "density_file": ("mock.bedgraph", open(mock_dir / "mock.bedgraph", "rb")),
     }
     
-    data = {"offsets": "0,-12"}
+    data = {"offsets": "0,12"}
     
     response = requests.post(f"{base_url}/submit_job", files=files, data=data)
     
@@ -122,7 +122,7 @@ def test_status_and_download():
             print(f"    - {filename}")
     
     # Check that we have the expected output files
-    expected_files = {"output_offset_0.pdb", "output_offset_-12.pdb"}
+    expected_files = {"output_offset_0.pdb", "output_offset_12.pdb"}
     actual_files = set(file_list)
     
     assert expected_files == actual_files, f"Expected {expected_files}, got {actual_files}"

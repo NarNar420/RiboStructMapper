@@ -10,8 +10,8 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [
-    { name = "Einar Alhassid Gutkin" },
-    { name = "Ailie Marx" }
+    { name = "Einar Alhassid Gutkin", email = "einar@marx-group.edu" },
+    { name = "Ailie Marx", email = "ailiemarx@marx-group.edu" }
 ]
 keywords = ["bioinformatics", "ribosome-profiling", "structural-biology", "pdb", "visualization"]
 classifiers = [
@@ -46,7 +46,9 @@ riboprint = "ribostruct.cli.main:main"
 
 [project.urls]
 "Homepage" = "https://github.com/NarNar420/RiboStructMapper"
+"Documentation" = "https://github.com/NarNar420/RiboStructMapper/blob/main/docs/README.md"
 "Bug Tracker" = "https://github.com/NarNar420/RiboStructMapper/issues"
+"Changelog" = "https://github.com/NarNar420/RiboStructMapper/releases"
 
 [tool.setuptools.packages.find]
 include = ["ribostruct*"]

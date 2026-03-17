@@ -112,7 +112,7 @@ def process_job(job_id: str) -> None:
             params_content = f.read()
         
         # Extract offsets from params.txt
-        # Format: "offsets=0,-10,-15"
+        # Format: "offsets=0,10,15"
         offsets_str = ""
         for line in params_content.split("\n"):
             if line.startswith("offsets="):
@@ -253,7 +253,7 @@ async def submit_job(
     pdb_file: UploadFile = File(..., description="PDB structure file"),
     fasta_file: UploadFile = File(..., description="FASTA file (header format: >ID Chrom:Start..End)"),
     density_file: UploadFile = File(..., description="bedGraph density file"),
-    offsets: str = Form(..., description="Comma-separated offset values (e.g., '0,-10,-15')")
+    offsets: str = Form(..., description="Comma-separated offset values (e.g., '0,10,15')")
 ) -> JobResponse:
     """
     Submit a new job for processing.
@@ -264,7 +264,7 @@ async def submit_job(
         pdb_file: PDB structure file
         fasta_file: FASTA file with coordinate header
         density_file: Ribosome density in bedGraph format
-        offsets: Comma-separated offset values (e.g., "0,-10,-15")
+        offsets: Comma-separated offset values (e.g., "0,10,15")
     
     Returns:
         JobResponse with job_id and status

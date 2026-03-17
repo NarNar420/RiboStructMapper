@@ -1,8 +1,10 @@
-This is a comprehensive architectural blueprint for your web application. This plan is designed to serve as the master specification document for development.
+# RiboPrint — Technical Specification
 
-### **Project Title:** Ribo-Struct Mapper
+**Project Title:** RiboPrint  
+**Version:** 1.0.0  
+**Authors:** Einar Alhassid Gutkin, Ailie Marx (Marx Structural Biology Group)  
 
-**Objective:** A web-based pipeline to visualize ribosome density on 3D protein structures by translating genomic data and injecting density scores into the B-factor field of PDB files.
+**Objective:** A web-based bioinformatics pipeline to visualize ribosome density on 3D protein structures by translating genomic data and injecting density scores into the B-factor field of PDB files.
 
 ---
 
@@ -66,7 +68,7 @@ This is the core "Brain" of the app. The backend should be divided into these sp
 
 * **Function 7: `apply_offset(base_score_vector, offset_value)**`
 * **Logic:** Shifts the vector indices by the `offset_value`.
-* *Example:* If offset is -15 (5 residues), the score typically at residue 50 is moved to residue 45.
+* *Example:* If offset is 15 (5 residues), the ribosome density is shifted 15 nucleotides downstream so the signal aligns with the A/P-site.
 * *Boundary Handling:* Discards scores that shift "off" the ends of the protein.
 
 

@@ -64,7 +64,7 @@ uvicorn server:app --reload
 2. **FASTA File** (`.fasta`) - Genomic sequence
 3. **GTF File** (`.gtf`) - Gene annotations
 4. **bedGraph File** (`.bedgraph`) - Ribosome density data
-5. **Offset Values** - Comma-separated integers (e.g., `0,-12,-15`)
+5. **Offset Values** - Comma-separated integers (e.g., `0,12,15`)
 
 ### System Requirements
 
@@ -80,7 +80,7 @@ The web interface provides an intuitive way to process your data:
 
 1. Open http://riboprint.marx-group.edu:8000 in your browser
 2. Upload the 4 required files (PDB, FASTA, GTF, bedGraph)
-3. Enter offset values (e.g., `0,-12`)
+3. Enter offset values (e.g., `0,12`)
 4. Click "Process Files"
 5. Wait for processing (status updates every 2 seconds)
 6. Download results as ZIP file
@@ -100,7 +100,7 @@ curl -X POST "http://riboprint.marx-group.edu:8000/submit_job" \
   -F "fasta_file=@genome.fasta" \
   -F "gtf_file=@annotation.gtf" \
   -F "density_file=@density.bedgraph" \
-  -F "offsets=0,-12,-15"
+  -F "offsets=0,12,15"
 ```
 
 **Response:**
@@ -150,8 +150,8 @@ curl "http://riboprint.marx-group.edu:8000/download/a3b8d1b6-0b3b-4b1a-9c1a-1a2b
 **Response:**
 ZIP archive containing all output PDB files (one per offset value):
 - `output_offset_0.pdb`
-- `output_offset_-12.pdb`
-- `output_offset_-15.pdb`
+- `output_offset_12.pdb`
+- `output_offset_15.pdb`
 
 ### GET `/health`
 
@@ -267,11 +267,11 @@ RiboPrint/
 
 ### Offset Values
 
-Offset values adjust the ribosome position on the mRNA:
+Offset values mechanically push the ribosome density downstream on the sequence towards the 3' end.
 
 - **0** - No adjustment (raw density)
-- **-12** - Shift 12 nucleotides upstream (common for P-site)
-- **-15** - Shift 15 nucleotides upstream (alternative P-site)
+- **12** - Shift 12 nucleotides downstream (common for P-site)
+- **15** - Shift 15 nucleotides downstream (alternative P-site)
 
 Multiple offsets generate separate output files for comparison.
 
@@ -312,7 +312,7 @@ JOB_ID=$(curl -X POST "http://riboprint.marx-group.edu:8000/submit_job" \
   -F "fasta_file=@data/genome.fasta" \
   -F "gtf_file=@data/annotation.gtf" \
   -F "density_file=@data/density.bedgraph" \
-  -F "offsets=0,-12" | jq -r '.job_id')
+  -F "offsets=0,12" | jq -r '.job_id')
 
 # 3. Monitor status
 watch -n 2 curl -s "http://riboprint.marx-group.edu:8000/status/$JOB_ID" | jq
@@ -322,7 +322,7 @@ curl "http://riboprint.marx-group.edu:8000/download/$JOB_ID" -o results.zip
 
 # 5. Extract and visualize in PyMOL/ChimeraX
 unzip results.zip
-pymol output_offset_-12.pdb
+pymol output_offset_12.pdb
 ```
 
 ---
@@ -331,7 +331,7 @@ pymol output_offset_-12.pdb
 
 ```bash
 # Clone the repository
-git clone <repository_url>
+git clone https://github.com/NarNar420/RiboStructMapper.git
 cd RiboPrint
 
 # Create virtual environment

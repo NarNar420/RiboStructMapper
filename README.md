@@ -108,7 +108,7 @@ pytest tests/api/
 
 1. Open http://riboprint.marx-group.edu:8000
 2. Upload required files (PDB, FASTA, GTF, bedGraph)
-3. Enter offset values (e.g., `0,-12`)
+3. Enter offset values (e.g., `0,12`)
 4. Click "Process Files"
 5. Download results as ZIP
 
@@ -128,7 +128,7 @@ output_files = run_pipeline(
     fasta_path="genome.fasta",
     gtf_path="annotation.gtf",
     bedgraph_path="density.bedgraph",
-    offsets=[0, -12, -15]
+    offsets=[0, 12, 15]
 )
 ```
 
@@ -138,7 +138,7 @@ output_files = run_pipeline(
 
 ```bash
 # Clone repository
-git clone <repository_url>
+git clone https://github.com/NarNar420/RiboStructMapper.git
 cd RiboPrint
 
 # Create virtual environment

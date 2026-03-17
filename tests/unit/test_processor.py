@@ -20,43 +20,43 @@ def test_shift_nucleotide_density_no_offset():
     print("✓ Zero offset: no change")
 
 
-def test_shift_nucleotide_density_negative():
-    """Test negative offset (upstream shift)."""
+def test_shift_nucleotide_density_positive_downstream():
+    """Test strict downstream shift (positive offset)."""
     # Original: [10, 20, 30, 40, 50, 60]
-    # Offset -2: shift left by 2
+    # Offset 2: shift right by 2
+    # Result: [0, 0, 10, 20, 30, 40]
+    density = np.array([10.0, 20.0, 30.0, 40.0, 50.0, 60.0])
+    shifted = shift_nucleotide_density(density, 2)
+    
+    expected = np.array([0.0, 0.0, 10.0, 20.0, 30.0, 40.0])
+    np.testing.assert_array_equal(shifted, expected)
+    print("✓ Positive offset 2: shifted downstream correctly")
+
+
+def test_shift_nucleotide_density_absolute_handling():
+    """Test absolute value handling (negative input becomes downstream shift)."""
+    # Original: [10, 20, 30, 40, 50, 60]
+    # Offset -2 -> abs(-2) = 2
     # Result: [0, 0, 10, 20, 30, 40]
     density = np.array([10.0, 20.0, 30.0, 40.0, 50.0, 60.0])
     shifted = shift_nucleotide_density(density, -2)
     
     expected = np.array([0.0, 0.0, 10.0, 20.0, 30.0, 40.0])
     np.testing.assert_array_equal(shifted, expected)
-    print("✓ Negative offset -2: shifted upstream correctly")
-
-
-def test_shift_nucleotide_density_positive():
-    """Test positive offset (downstream shift)."""
-    # Original: [10, 20, 30, 40, 50, 60]
-    # Offset +2: shift right by 2
-    # Result: [30, 40, 50, 60, 0, 0]
-    density = np.array([10.0, 20.0, 30.0, 40.0, 50.0, 60.0])
-    shifted = shift_nucleotide_density(density, 2)
-    
-    expected = np.array([30.0, 40.0, 50.0, 60.0, 0.0, 0.0])
-    np.testing.assert_array_equal(shifted, expected)
-    print("✓ Positive offset +2: shifted downstream correctly")
+    print("✓ Negative offset -2: Handled strictly via abs() and shifted downstream correctly")
 
 
 def test_shift_nucleotide_density_by_codon():
-    """Test shift by one codon (3 nucleotides)."""
+    """Test downstream shift by one codon (3 nucleotides)."""
     # Original: [10, 10, 10, 20, 20, 20]  (2 codons)
-    # Offset -3: shift left by 3 (one codon)
+    # Offset 3: shift downstream by 3 (one codon)
     # Result: [0, 0, 0, 10, 10, 10]
     density = np.array([10.0, 10.0, 10.0, 20.0, 20.0, 20.0])
-    shifted = shift_nucleotide_density(density, -3)
+    shifted = shift_nucleotide_density(density, 3)
     
     expected = np.array([0.0, 0.0, 0.0, 10.0, 10.0, 10.0])
     np.testing.assert_array_equal(shifted, expected)
-    print("✓ Offset -3 (one codon): shifted correctly")
+    print("✓ Offset 3 (one codon): shifted downstream correctly")
 
 
 def test_aggregate_density_mean():
@@ -131,22 +131,22 @@ def test_critical_offset_before_aggregation():
     - 6 nucleotides: [10, 10, 10, 20, 20, 20]
     - 2 codons: Met (10,10,10) and Pro (20,20,20)
     
-    Offset -1 (shift left by 1 nt):
-    - Shifted NT: [10, 10, 20, 20, 20, 0]
-    - New codons: (10,10,20) and (20,20,0)
-    - AA means: 13.33 and 13.33
+    Offset 1 (shift DOWNSTREAM by 1 nt):
+    - Shifted NT: [0, 10, 10, 10, 20, 20]
+    - New codons: (0,10,10) and (10,20,20)
+    - AA means: 6.67 and 16.67
     
     If we incorrectly applied offset at AA level:
     - AA before: [10, 20]
-    - Offset -1 nt = -0.33 AA (rounds to 0)
+    - Offset 1 nt = 0.33 AA (rounds to 0)
     - Would get: [10, 20] (no change!)
     
     This test MUST pass to prove correctness.
     """
     raw_density = np.array([10.0, 10.0, 10.0, 20.0, 20.0, 20.0])
     
-    # Apply offset -1 (shift RIGHT by 1 nt)
-    shifted_nt = shift_nucleotide_density(raw_density, -1)
+    # Apply downstream offset 1
+    shifted_nt = shift_nucleotide_density(raw_density, 1)
     expected_shifted = np.array([0.0, 10.0, 10.0, 10.0, 20.0, 20.0])
     np.testing.assert_array_equal(shifted_nt, expected_shifted)
     
@@ -155,33 +155,30 @@ def test_critical_offset_before_aggregation():
     expected_aa = np.array([20.0/3.0, 50.0/3.0])  # 6.67, 16.67
     np.testing.assert_array_almost_equal(aa_density, expected_aa, decimal=2)
     
-    print("✓ CRITICAL: Offset -1 applied at NT level BEFORE aggregation")
+    print("✓ CRITICAL: Offset 1 applied at NT level BEFORE aggregation")
     print(f"  Raw NT: {raw_density}")
     print(f"  Shifted NT: {shifted_nt}")
     print(f"  AA density: {aa_density}")
 
 
 def test_process_offsets_multiple():
-    """Test processing multiple offsets."""
+    """Test processing multiple absolute offsets."""
     raw_density = np.array([10.0, 10.0, 10.0, 20.0, 20.0, 20.0])
-    offsets = [0, -3]
+    offsets = [0, 3]
     
     results = process_offsets(raw_density, offsets, method='mean')
     
     # Offset 0: no shift
-    # Codons: (10,10,10) and (20,20,20)
-    # Means: 10.0 and 20.0
     expected_0 = np.array([10.0, 20.0])
     np.testing.assert_array_almost_equal(results[0], expected_0)
     
-    # Offset -3: shift RIGHT by one codon
+    # Offset 3: shift DOWNSTREAM by one codon
     # Shifted: [0, 0, 0, 10, 10, 10]
     # Codons: (0,0,0) and (10,10,10)
-    # Means: 0.0 and 10.0
-    expected_minus3 = np.array([0.0, 10.0])
-    np.testing.assert_array_almost_equal(results[-3], expected_minus3)
+    expected_3 = np.array([0.0, 10.0])
+    np.testing.assert_array_almost_equal(results[3], expected_3)
     
-    print("✓ Multiple offsets processed correctly")
+    print("✓ Multiple positive offsets processed correctly")
 
 
 def test_process_offsets_different_methods():
@@ -217,7 +214,7 @@ def test_real_world_example():
     """
     Test with realistic ribosome profiling data.
     
-    Simulates P-site offset of -12 nucleotides.
+    Simulates a strictly positive P-site downstream offset of 12 nucleotides.
     """
     # 15 nucleotides (5 codons)
     raw_density = np.array([
@@ -228,21 +225,21 @@ def test_real_world_example():
         65.0, 70.0, 75.0   # Codon 5
     ])
     
-    # Apply P-site offset (-12 nt = -4 codons)
-    results = process_offsets(raw_density, [0, -12], method='mean')
+    # Apply positive P-site offset (12 nt = 4 codons downstream)
+    results = process_offsets(raw_density, [0, 12], method='mean')
     
     # Offset 0: means of each codon
     expected_0 = np.array([10.0, 25.0, 40.0, 55.0, 70.0])
     np.testing.assert_array_almost_equal(results[0], expected_0)
     
-    # Offset -12: shift RIGHT by 12
+    # Offset 12: shift RIGHT by 12 (absolute offset)
     # Shifted: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 10, 15]
     # Codons: (0,0,0), (0,0,0), (0,0,0), (0,0,0), (5,10,15)
     # Means: 0.0, 0.0, 0.0, 0.0, 10.0
-    expected_minus12 = np.array([0.0, 0.0, 0.0, 0.0, 10.0])
-    np.testing.assert_array_almost_equal(results[-12], expected_minus12)
+    expected_12 = np.array([0.0, 0.0, 0.0, 0.0, 10.0])
+    np.testing.assert_array_almost_equal(results[12], expected_12)
     
-    print("✓ Real-world P-site offset (-12): correct")
+    print("✓ Real-world positive P-site offset (12): correct")
 
 
 def main():
@@ -254,8 +251,8 @@ def main():
     
     tests = [
         ("Zero offset", test_shift_nucleotide_density_no_offset),
-        ("Negative offset", test_shift_nucleotide_density_negative),
-        ("Positive offset", test_shift_nucleotide_density_positive),
+        ("Positive downstream offset", test_shift_nucleotide_density_positive_downstream),
+        ("Absolute value handling", test_shift_nucleotide_density_absolute_handling),
         ("Shift by codon", test_shift_nucleotide_density_by_codon),
         ("Mean aggregation", test_aggregate_density_mean),
         ("Max aggregation", test_aggregate_density_max),

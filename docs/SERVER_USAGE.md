@@ -26,7 +26,7 @@ The server will start at `http://riboprint.marx-group.edu:8000`
    - **fasta_file**: Select your genomic FASTA file  
    - **gtf_file**: Select your GTF/GFF annotation file
    - **density_file**: Select your bedGraph density file
-   - **offsets**: Enter comma-separated values (e.g., `0,-10,-15`)
+   - **offsets**: Enter comma-separated values (e.g., `0,10,15`)
 
 6. Click "Execute"
 

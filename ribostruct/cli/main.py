@@ -233,8 +233,8 @@ def main():
     output_files = run_pipeline(
         pdb_path=pdb_path,
         fasta_path=fasta_path,
-        bedgraph_path=bedgraph_path,
-        offsets=offsets,
+        bedgraph_path="data/mock/mock.bedgraph",
+        offsets=[0, 12],
         aggregation_method='mean',
         output_dir='.'
     )

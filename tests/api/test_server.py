@@ -103,7 +103,7 @@ def test_submit_job():
         }
         
         data = {
-            "offsets": "0,-10,-15"
+            "offsets": "0,10,15"
         }
         
         # Submit the job
@@ -146,7 +146,7 @@ def test_submit_job():
         
         # Verify params.txt content
         params_content = (job_dir / "params.txt").read_text()
-        assert "offsets=0,-10,-15" in params_content, "params.txt should contain offsets"
+        assert "offsets=0,10,15" in params_content, "params.txt should contain offsets"
         print(f"✓ Parameters saved correctly")
         
         
@@ -182,7 +182,7 @@ def test_multiple_job_submissions():
                 "density_file": ("mock.bedgraph", open(mock_dir / "mock.bedgraph", "rb")),
             }
             
-            data = {"offsets": f"0,-{i*10}"}
+            data = {"offsets": f"0,{i*10}"}
             
             response = client.post("/submit_job", files=files, data=data)
             

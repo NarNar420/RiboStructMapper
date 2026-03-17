@@ -60,7 +60,7 @@ def main():
                 "density_file": ("mock.bedgraph", bedgraph),
             }
             
-            data = {"offsets": "0,-12"}
+            data = {"offsets": "0,12"}
             
             response = requests.post(f"{BASE_URL}/submit_job", files=files, data=data)
             response.raise_for_status()

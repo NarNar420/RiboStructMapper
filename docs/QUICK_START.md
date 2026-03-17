@@ -23,7 +23,7 @@ You need **4 files**:
 
 ### 4. Upload and Process
 1. **Upload files** - Drag & drop or click to select each file
-2. **Enter offsets** - Type comma-separated values (e.g., `0,-12,-15`)
+2. **Enter offsets** - Type comma-separated values (e.g., `0,12,15`)
 3. **Click "Process Files"** - Wait for processing to complete
 4. **Watch status** - Progress updates every 2 seconds
 
@@ -37,14 +37,14 @@ When status shows **"Completed"**:
 
 The ZIP file includes one PDB file per offset:
 - `output_offset_0.pdb` - No offset (raw density)
-- `output_offset_-12.pdb` - 12 nucleotide shift
-- `output_offset_-15.pdb` - 15 nucleotide shift (if specified)
+- `output_offset_12.pdb` - 12 nucleotide downstream shift
+- `output_offset_15.pdb` - 15 nucleotide downstream shift (if specified)
 
 Each PDB file has **ribosome density scores in the B-factor column** - ready for visualization!
 
 ## 💡 Tips
 
-- **Offsets**: Common values are `0, -12, -15` for P-site mapping
+- **Offsets**: Common values are `0, 12, 15` for P-site mapping
 - **Processing time**: Usually takes 5-30 seconds depending on file size
 - **Status**: "completed" = ready to download, "failed" = check your files
 - **Results**: Automatically deleted after 24 hours to save space
